@@ -1,4 +1,6 @@
-﻿import { chromium } from "@playwright/test";
+import fs from "node:fs";
+import path from "node:path";
+import { chromium } from "@playwright/test";
 import "dotenv/config";
 
 const username = process.env.GARENA_USERNAME;
@@ -62,15 +64,43 @@ async function run() {
         'input[placeholder="Tài khoản Garena, Email hoặc số điện thoại"]',
         username
     );
-    await humanPause();
+    await humanPause(400, 800);
     await humanType(page, 'input[placeholder="Mật khẩu"]', password);
-    await humanPause(2000, 4000);
+    await humanPause(800, 1500);
 
-    console.log(
-        "[Garena] Dừng tại màn hình đổi mật khẩu, KHÔNG nhấn THAY ĐỔI."
+    console.log("[Garena] B3: Nhấn Đăng Nhập");
+    await page.locator('button:has-text("Đăng Nhập Ngay")').click();
+    await humanPause(1000, 2000);
+
+    console.log("[Garena] B4: Chờ Account Center tải xong");
+    await page.waitForSelector('text=Trang chủ', { timeout: 30000 });
+    await humanPause(600, 1200);
+
+    console.log("[Garena] B5: Chuyển sang tab Bảo mật");
+    await page.locator('text=Bảo mật').first().click();
+    await humanPause(1200, 2000);
+    await page.waitForSelector('text=ĐỔI MẬT KHẨU', { timeout: 20000 });
+
+    console.log("[Garena] B6: Điền form đổi mật khẩu");
+    await humanType(page, 'input[name="old_password"]', password);
+    await humanPause(400, 700);
+    await humanType(page, 'input[name="new_password"]', newPassword);
+    await humanPause(350, 650);
+    await humanType(page, 'input[name="confirm_new_password"]', newPassword);
+
+    const screenshotDir = path.join(process.cwd(), "storage", "logs");
+    fs.mkdirSync(screenshotDir, { recursive: true });
+    const screenshotPath = path.join(
+        screenshotDir,
+        `garena-change-form-${Date.now()}.png`
     );
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+    console.log(`[Garena] Đã chụp form đổi mật khẩu tại ${screenshotPath}`);
+
+    console.log("[Garena] Đứng yên tại màn hình đổi mật khẩu, KHÔNG nhấn THAY ĐỔI.");
     console.log(`[Garena] Mật khẩu mới dự kiến: ${newPassword}`);
-    await page.waitForTimeout(40000);
+    // await page.locator('button:has-text("THAY ĐỔI")').click();
+    await page.waitForTimeout(20000);
 
     await browser.close();
 }
