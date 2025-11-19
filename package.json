@@ -8,7 +8,7 @@
         "playwright:garena": "node playwright/garena-runner.js"
     },
     "devDependencies": {
-        "@playwright/test": "^1.48.2",
+        "@playwright/test": "^1.56.1",
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",

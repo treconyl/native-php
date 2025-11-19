@@ -19,7 +19,7 @@
     ])
 
     <header class="flex flex-col gap-2">
-        <p class="text-sm text-slate-500">Xin chào, {{ auth()->user()->name ?? auth()->user()->email }}</p>
+        <p class="text-sm text-slate-500">Xin chào</p>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-3xl font-semibold text-slate-900">Tổng quan hệ thống</h2>
             <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-white">Xuất CSV</a>

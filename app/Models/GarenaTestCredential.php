@@ -13,10 +13,14 @@ class GarenaTestCredential extends Model
         'username',
         'password',
         'new_password',
+        'account_id',
+        'proxy_key_id',
     ];
 
     protected $casts = [
         'password' => 'encrypted',
         'new_password' => 'encrypted',
+        'account_id' => 'integer',
+        'proxy_key_id' => 'integer',
     ];
 }

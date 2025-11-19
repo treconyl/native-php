@@ -1,6 +1,9 @@
 {
     "agents": [
-        "cursor"
+        "codex"
+    ],
+    "editors": [
+        "vscode"
     ],
     "guidelines": []
 }

@@ -127,6 +127,11 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'garena_test' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/garena-test.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
     ],
-
 ];
