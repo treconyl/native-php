@@ -45,26 +45,20 @@ class TestController extends Controller
         $logPath = storage_path('logs/garena-test.log');
         file_put_contents($logPath, '');
 
-        $runner = new RunGarenaTest([
+        $jobPayload = [
+            'account_id' => $payload['account_id'],
             'username' => $payload['username'],
             'password' => $payload['password'],
             'new_password' => $payload['new_password'] ?? 'Password#2025',
             'proxy_key_id' => $payload['proxy_key_id'],
             'proxy_label' => $proxy?->label,
-        ]);
+        ];
 
-        try {
-            $runner->handle();
-            Log::channel('garena_test')->info('[Garena Test] Đã chạy Playwright trực tiếp từ giao diện.');
+        RunGarenaTest::dispatch($jobPayload);
 
-            return back()->with('status', 'Đã chạy xong Garena Playwright Test, xem log bên dưới để theo dõi chi tiết.');
-        } catch (\Throwable $e) {
-            Log::channel('garena_test')->error('[Garena Test] Lỗi khi chạy Playwright trực tiếp', [
-                'error' => $e->getMessage(),
-            ]);
+        Log::channel('garena_test')->info('[Garena Test] Đã xếp hàng job Playwright từ giao diện.');
 
-            return back()->withErrors('Không thể chạy Playwright test Garena: ' . $e->getMessage());
-        }
+        return back()->with('status', 'Đã gửi job Garena Playwright, xem log bên dưới để theo dõi tiến trình.');
     }
 
     public function saveGarenaCredentials(Request $request)

@@ -167,6 +167,11 @@ class AccountController extends Controller
                 'last_used_at' => now(),
                 'meta' => array_merge($proxy->meta ?? [], [
                     'last_proxy_response' => $payload,
+                    'last_proxy_http' => $payload['proxyhttp'] ?? null,
+                    'last_proxy_socks' => $payload['proxysocks5'] ?? null,
+                    'last_proxy_username' => $payload['username'] ?? null,
+                    'last_proxy_password' => $payload['password'] ?? null,
+                    'last_proxy_rotated_at' => now()->toDateTimeString(),
                 ]),
             ]);
 
@@ -191,7 +196,7 @@ class AccountController extends Controller
     {
         $proxy->update([
             'stop_requested' => true,
-            'status' => 'stopping',
+            'status' => 'idle',
         ]);
 
         return redirect()->route('admin.dashboard')->with('status', "Đã yêu cầu dừng key {$proxy->label}");
@@ -232,6 +237,58 @@ class AccountController extends Controller
             ]);
 
             return back()->withErrors('Không thể gọi API proxy: ' . $e->getMessage());
+        }
+    }
+
+    public function rotateProxy(ProxyKey $proxy, Request $request)
+    {
+        $params = [
+            'key' => $proxy->api_key,
+            'nhamang' => $request->input('nhamang', 'random'),
+            'tinhthanh' => $request->input('tinhthanh', 0),
+        ];
+
+        try {
+            $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
+            $data = $response->json();
+
+            Log::info('Proxy API rotate', [
+                'proxy_key_id' => $proxy->id,
+                'params' => $params,
+                'status_code' => $response->status(),
+                'response' => $data,
+            ]);
+
+            if (($data['status'] ?? null) !== 100) {
+                $message = $data['message'] ?? __('Không có dữ liệu trả về.');
+
+                return back()->withErrors("Không thể xoay IP cho key {$proxy->label}: {$message}");
+            }
+
+            $ipHttp = $data['proxyhttp'] ?? null;
+            $ipSocks = $data['proxysocks5'] ?? null;
+
+            $proxy->update([
+                'last_used_at' => now(),
+                'meta' => array_merge($proxy->meta ?? [], [
+                    'last_proxy_response' => $data,
+                    'last_proxy_http' => $ipHttp,
+                    'last_proxy_socks' => $ipSocks,
+                    'last_proxy_username' => $data['username'] ?? null,
+                    'last_proxy_password' => $data['password'] ?? null,
+                    'last_proxy_rotated_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+
+            return back()->with('status', "Đã xoay IP cho {$proxy->label}. HTTP: {$ipHttp}");
+        } catch (\Throwable $e) {
+            Log::error('Proxy API rotate failed', [
+                'proxy_key_id' => $proxy->id,
+                'params' => $params,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors('Không thể xoay IP: ' . $e->getMessage());
         }
     }
 

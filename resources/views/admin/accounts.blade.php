@@ -2,8 +2,29 @@
 
 @section('content')
     <header class="flex flex-col gap-2">
-        <h2 class="text-3xl font-semibold text-slate-900">Danh sách tài khoản</h2>
-        <p class="text-sm text-slate-500">Quản lý và theo dõi từng tài khoản được import vào hệ thống.</p>
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-3xl font-semibold text-slate-900">Danh sách tài khoản</h2>
+                <p class="text-sm text-slate-500">Quản lý và theo dõi từng tài khoản đã import vào hệ thống.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('admin.accounts.import') }}" enctype="multipart/form-data" class="flex items-center gap-2 text-xs text-slate-600 border border-dashed border-slate-300 px-3 py-2 rounded-xl bg-white">
+                    @csrf
+                    <label class="cursor-pointer text-slate-500">
+                        Import
+                        <input type="file" name="file" accept=".txt,.csv" class="hidden" onchange="this.form.submit()">
+                    </label>
+                    <span class="text-[11px] text-slate-400">login|password</span>
+                </form>
+                <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white">Xuất CSV</a>
+            </div>
+        </div>
+        @if (session('status'))
+            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-700 text-sm">{{ session('status') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-rose-700 text-sm">{{ $errors->first() }}</div>
+        @endif
     </header>
 
     <div class="rounded-2xl bg-white shadow-sm border border-white p-6 space-y-4">
@@ -18,7 +39,7 @@
                     <th class="px-3 py-3 text-left">Mật khẩu hiện tại</th>
                     <th class="px-3 py-3 text-left">Mật khẩu mới</th>
                     <th class="px-3 py-3 text-left">Trạng thái</th>
-                    <th class="px-3 py-3 text-left">Lần thử cuối</th>
+                    <th class="px-3 py-3 text-left">Lần thử gần nhất</th>
                     <th class="px-3 py-3 text-left">Lỗi gần nhất</th>
                 </tr>
                 </thead>

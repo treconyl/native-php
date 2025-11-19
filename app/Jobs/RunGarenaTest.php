@@ -2,12 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Models\Account;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
 
 class RunGarenaTest implements ShouldQueue
@@ -35,6 +37,12 @@ class RunGarenaTest implements ShouldQueue
             $env['PLAYWRIGHT_PROXY_LABEL'] = $this->credentials['proxy_label'] ?? '';
         }
 
+        $this->updateAccount([
+            'status' => 'processing',
+            'last_attempted_at' => now(),
+            'last_error' => null,
+        ]);
+
         $process = new Process($command, base_path(), $env);
         $process->setTimeout(600);
 
@@ -52,13 +60,41 @@ class RunGarenaTest implements ShouldQueue
         });
 
         if (! $process->isSuccessful()) {
+            $errorOutput = $process->getErrorOutput() ?: $process->getOutput();
+
             Log::channel('garena_test')->error('[Garena Test Job] Thất bại', [
-                'error' => $process->getErrorOutput() ?: $process->getOutput(),
+                'error' => $errorOutput,
+            ]);
+
+            $this->updateAccount([
+                'status' => 'failed',
+                'last_attempted_at' => now(),
+                'last_error' => Str::limit(trim($errorOutput), 1000),
             ]);
 
             return;
         }
 
+        $this->updateAccount([
+            'status' => 'success',
+            'current_password' => $this->credentials['new_password'] ?? null,
+            'next_password' => null,
+            'last_attempted_at' => now(),
+            'last_succeeded_at' => now(),
+            'last_error' => null,
+        ]);
+
         Log::channel('garena_test')->info('[Garena Test Job] Hoàn tất');
+    }
+
+    protected function updateAccount(array $attributes): void
+    {
+        $accountId = $this->credentials['account_id'] ?? null;
+
+        if (! $accountId) {
+            return;
+        }
+
+        Account::whereKey($accountId)->update($attributes);
     }
 }

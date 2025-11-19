@@ -7,6 +7,8 @@ const username = process.env.GARENA_USERNAME;
 const password = process.env.GARENA_PASSWORD;
 const newPassword = process.env.GARENA_NEW_PASSWORD || "Password#2025";
 const headless = process.env.PLAYWRIGHT_HEADLESS !== "false";
+const timezone = process.env.PLAYWRIGHT_TIMEZONE || "Asia/Ho_Chi_Minh";
+const locale = process.env.PLAYWRIGHT_LOCALE || "vi-VN";
 
 if (!username || !password) {
     console.error(
@@ -19,6 +21,39 @@ const randomInt = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
 const humanPause = (min = 350, max = 1100) =>
     new Promise((resolve) => setTimeout(resolve, randomInt(min, max)));
+const randomItem = (arr) => arr[randomInt(0, arr.length - 1)];
+
+const userAgents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+];
+
+const viewportOptions = [
+    { width: 1366, height: 768 },
+    { width: 1440, height: 900 },
+    { width: 1536, height: 864 },
+    { width: 1920, height: 1080 },
+];
+
+async function humanMouseMove(page) {
+    const steps = randomInt(5, 15);
+    for (let i = 0; i < steps; i++) {
+        await page.mouse.move(randomInt(0, 1200), randomInt(0, 600), {
+            steps: randomInt(2, 5),
+        });
+        await humanPause(80, 180);
+    }
+}
+
+async function humanScroll(page, distance = 600) {
+    const parts = randomInt(2, 4);
+    const chunk = Math.ceil(distance / parts);
+    for (let i = 0; i < parts; i++) {
+        await page.mouse.wheel(0, chunk + randomInt(-40, 40));
+        await humanPause(120, 240);
+    }
+}
 
 async function humanType(page, selector, text) {
     await page.click(selector);
@@ -37,13 +72,37 @@ async function humanType(page, selector, text) {
 }
 
 async function run() {
-    const browser = await chromium.launch({ headless });
-    const context = await browser.newContext({
-        viewport: { width: 1280, height: 720 },
-        userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+    const profileDir = path.join(process.cwd(), "storage", "playwright-profile");
+    fs.mkdirSync(profileDir, { recursive: true });
+
+    const context = await chromium.launchPersistentContext(profileDir, {
+        headless,
+        viewport: randomItem(viewportOptions),
+        timezoneId: timezone,
+        locale,
+        userAgent: randomItem(userAgents),
+        permissions: ["geolocation"],
+        bypassCSP: true,
+        deviceScaleFactor: randomInt(1, 2),
+        args: [
+            "--disable-blink-features=AutomationControlled",
+            "--no-default-browser-check",
+            "--disable-site-isolation-trials",
+        ],
     });
-    const page = await context.newPage();
+
+    const page = context.pages()[0] ?? (await context.newPage());
+    await page.addInitScript(() => {
+        Object.defineProperty(navigator, "webdriver", {
+            get: () => undefined,
+        });
+        window.chrome = {
+            runtime: {},
+        };
+        Object.defineProperty(navigator, "languages", {
+            get: () => ["vi-VN", "en-US"],
+        });
+    });
 
     console.log("[Garena] B1: Mở https://account.garena.com");
     await page.goto("https://account.garena.com", {
@@ -56,6 +115,7 @@ async function run() {
         timeout: 20000,
     });
     await page.evaluate(() => window.scrollTo(0, 120));
+    await humanMouseMove(page);
     await humanPause();
 
     console.log("[Garena] B2: Điền form đăng nhập");
@@ -75,6 +135,7 @@ async function run() {
     console.log("[Garena] B4: Chờ Account Center tải xong");
     await page.waitForSelector('text=Trang chủ', { timeout: 30000 });
     await humanPause(600, 1200);
+    await humanScroll(page, 500);
 
     console.log("[Garena] B5: Chuyển sang tab Bảo mật");
     await page.locator('text=Bảo mật').first().click();
@@ -102,7 +163,7 @@ async function run() {
     // await page.locator('button:has-text("THAY ĐỔI")').click();
     await page.waitForTimeout(20000);
 
-    await browser.close();
+    await context.close();
 }
 
 run().catch((error) => {

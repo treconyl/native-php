@@ -19,3 +19,4 @@ Route::post('/proxies', [AccountController::class, 'storeProxyKey'])->name('admi
 Route::post('/proxies/{proxy}/start', [AccountController::class, 'startProxy'])->name('admin.proxy.start');
 Route::post('/proxies/{proxy}/stop', [AccountController::class, 'stopProxy'])->name('admin.proxy.stop');
 Route::post('/proxies/{proxy}/test', [AccountController::class, 'testProxy'])->name('admin.proxy.test');
+Route::post('/proxies/{proxy}/rotate', [AccountController::class, 'rotateProxy'])->name('admin.proxy.rotate');
