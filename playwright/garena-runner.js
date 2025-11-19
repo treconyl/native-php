@@ -193,12 +193,30 @@ async function run() {
     await humanPause(1500, 2500);
 
     const successMessage = "Bạn đã đổi mật khẩu thành công.";
+    const verificationSelectors = [
+        'text=Xác minh thiết bị',
+        'text=Device Verification',
+        'text=Thiết bị'
+    ];
+
     try {
         await page.waitForSelector(`text=${successMessage}`, { timeout: 10000 });
         console.log(`[Garena] ${successMessage}`);
-    } catch (error) {
+    } catch (_) {
+        for (const selector of verificationSelectors) {
+            try {
+                if (await page.locator(selector).first().isVisible()) {
+                    throw new Error(
+                        "[Garena] Garena yêu cầu xác minh thiết bị sau khi đổi mật khẩu. Vui lòng hoàn tất bước xác minh thủ công."
+                    );
+                }
+            } catch {
+                // ignore if selector không tìm thấy
+            }
+        }
+
         throw new Error(
-            "[Garena] Không thấy thông báo đổi mật khẩu thành công sau khi submit."
+            "[Garena] Không thấy thông báo đổi mật khẩu thành công. Vui lòng kiểm tra lại trang Garena."
         );
     }
 

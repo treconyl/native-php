@@ -24,3 +24,4 @@ Homestead.yaml
 Thumbs.db
 .yarn
 /storage/playwright-profile
+/nativephp

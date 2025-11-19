@@ -13,7 +13,15 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
-        Window::open();
+        Window::open([
+            'title' => 'Garena Test Runner',
+            'width' => 1280,
+            'height' => 860,
+            'minWidth' => 1100,
+            'minHeight' => 720,
+            'resizable' => true,
+            'backgroundColor' => '#f1f5f9',
+        ]);
     }
 
     /**
