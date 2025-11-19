@@ -30,6 +30,7 @@ class RunGarenaTest implements ShouldQueue
             'GARENA_PASSWORD' => $this->credentials['password'],
             'GARENA_NEW_PASSWORD' => $this->credentials['new_password'] ?? 'Password#2025',
             'PLAYWRIGHT_HEADLESS' => env('PLAYWRIGHT_HEADLESS', 'false'),
+            'GARENA_ACCOUNT_ID' => $this->credentials['account_id'] ?? $this->credentials['username'],
         ]);
 
         if (! empty($this->credentials['proxy_key_id'])) {
@@ -77,8 +78,8 @@ class RunGarenaTest implements ShouldQueue
 
         $this->updateAccount([
             'status' => 'success',
-            'current_password' => $this->credentials['new_password'] ?? null,
-            'next_password' => null,
+            'current_password' => null,
+            'next_password' => $this->credentials['new_password'] ?? null,
             'last_attempted_at' => now(),
             'last_succeeded_at' => now(),
             'last_error' => null,

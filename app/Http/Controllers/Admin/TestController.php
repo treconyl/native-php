@@ -89,8 +89,17 @@ class TestController extends Controller
     {
         $data = $request->validate([
             'account_id' => ['required', 'exists:accounts,id'],
-            'new_password' => ['required', 'string'],
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:16',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/',
+            ],
             'proxy_key_id' => ['nullable', 'exists:proxy_keys,id'],
+        ], [
+            'new_password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
+            'new_password.regex' => 'Mật khẩu mới phải dài 8-16 ký tự và bao gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.',
         ]);
 
         $account = Account::findOrFail($data['account_id']);

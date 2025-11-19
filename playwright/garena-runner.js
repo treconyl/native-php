@@ -4,6 +4,7 @@ import { chromium } from "@playwright/test";
 import "dotenv/config";
 
 const username = process.env.GARENA_USERNAME;
+const accountId = process.env.GARENA_ACCOUNT_ID || username;
 const password = process.env.GARENA_PASSWORD;
 const newPassword = process.env.GARENA_NEW_PASSWORD || "Password#2025";
 const headless = process.env.PLAYWRIGHT_HEADLESS !== "false";
@@ -11,11 +12,24 @@ const timezone = process.env.PLAYWRIGHT_TIMEZONE || "Asia/Ho_Chi_Minh";
 const locale = process.env.PLAYWRIGHT_LOCALE || "vi-VN";
 
 if (!username || !password) {
+    console.error("Thiếu GARENA_USERNAME hoặc GARENA_PASSWORD trong biến môi trường.");
+    process.exit(1);
+}
+
+if (!passwordMeetsPolicy(newPassword)) {
     console.error(
-        "Thiếu GARENA_USERNAME hoặc GARENA_PASSWORD trong biến môi trường."
+        "[Garena] Mật khẩu mới không hợp lệ. Yêu cầu 8-16 ký tự và bao gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt."
     );
     process.exit(1);
 }
+
+const loginInputSelector =
+    'input[placeholder="Tài khoản Garena, Email hoặc số điện thoại"]';
+const passwordInputSelector = 'input[placeholder="Mật khẩu"]';
+const oldPasswordSelector = "#J-form-curpwd";
+const newPasswordSelector = "#J-form-newpwd";
+const confirmPasswordSelector = 'input[placeholder="Xác nhận Mật khẩu mới"]';
+const submitSelector = 'button:has-text("THAY ĐỔI")';
 
 const randomInt = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -55,14 +69,14 @@ async function humanScroll(page, distance = 600) {
     }
 }
 
-async function humanType(page, selector, text) {
+async function humanType(page, selector, text, options = { allowTypos: true }) {
     await page.click(selector);
     await humanPause(180, 420);
 
     for (let i = 0; i < text.length; i++) {
         const char = text[i];
 
-        if (i > 1 && randomInt(1, 18) === 1) {
+        if (options.allowTypos && i > 1 && randomInt(1, 18) === 1) {
             await page.keyboard.press("Backspace");
             await humanPause(70, 180);
         }
@@ -71,8 +85,28 @@ async function humanType(page, selector, text) {
     }
 }
 
+async function typeExact(page, selector, text) {
+    const input = page.locator(selector);
+    await input.click();
+    const currentValue = await input.inputValue();
+    if (currentValue) {
+        await page.keyboard.press("End");
+        for (let i = 0; i < currentValue.length; i++) {
+            await page.keyboard.press("Backspace");
+            await humanPause(60, 140);
+        }
+    }
+    await humanPause(120, 240);
+    await page.keyboard.type(text, { delay: randomInt(90, 230) });
+}
+
 async function run() {
-    const profileDir = path.join(process.cwd(), "storage", "playwright-profile");
+    const profileDir = path.join(
+        process.cwd(),
+        "storage",
+        "playwright-profile",
+        Buffer.from(accountId).toString("hex")
+    );
     fs.mkdirSync(profileDir, { recursive: true });
 
     const context = await chromium.launchPersistentContext(profileDir, {
@@ -93,12 +127,8 @@ async function run() {
 
     const page = context.pages()[0] ?? (await context.newPage());
     await page.addInitScript(() => {
-        Object.defineProperty(navigator, "webdriver", {
-            get: () => undefined,
-        });
-        window.chrome = {
-            runtime: {},
-        };
+        Object.defineProperty(navigator, "webdriver", { get: () => undefined });
+        window.chrome = { runtime: {} };
         Object.defineProperty(navigator, "languages", {
             get: () => ["vi-VN", "en-US"],
         });
@@ -119,35 +149,33 @@ async function run() {
     await humanPause();
 
     console.log("[Garena] B2: Điền form đăng nhập");
-    await humanType(
-        page,
-        'input[placeholder="Tài khoản Garena, Email hoặc số điện thoại"]',
-        username
-    );
+    await humanType(page, loginInputSelector, username);
     await humanPause(400, 800);
-    await humanType(page, 'input[placeholder="Mật khẩu"]', password);
+    await humanType(page, passwordInputSelector, password);
     await humanPause(800, 1500);
 
     console.log("[Garena] B3: Nhấn Đăng Nhập");
     await page.locator('button:has-text("Đăng Nhập Ngay")').click();
     await humanPause(1000, 2000);
+    await retryLoginIfNeeded(page, username, password);
 
     console.log("[Garena] B4: Chờ Account Center tải xong");
     await page.waitForSelector('text=Trang chủ', { timeout: 30000 });
     await humanPause(600, 1200);
-    await humanScroll(page, 500);
+    await humanScroll(page, 400);
 
-    console.log("[Garena] B5: Chuyển sang tab Bảo mật");
-    await page.locator('text=Bảo mật').first().click();
-    await humanPause(1200, 2000);
-    await page.waitForSelector('text=ĐỔI MẬT KHẨU', { timeout: 20000 });
+    console.log("[Garena] B5: Mở form đổi mật khẩu từ trang chủ");
+    const changePasswordButton = page.locator('text=Thay đổi Mật khẩu').first();
+    await changePasswordButton.click();
+    await humanPause(1000, 1800);
+    await page.waitForSelector(oldPasswordSelector, { timeout: 20000 });
 
     console.log("[Garena] B6: Điền form đổi mật khẩu");
-    await humanType(page, 'input[name="old_password"]', password);
+    await typeExact(page, oldPasswordSelector, password);
     await humanPause(400, 700);
-    await humanType(page, 'input[name="new_password"]', newPassword);
+    await typeExact(page, newPasswordSelector, newPassword);
     await humanPause(350, 650);
-    await humanType(page, 'input[name="confirm_new_password"]', newPassword);
+    await typeExact(page, confirmPasswordSelector, newPassword);
 
     const screenshotDir = path.join(process.cwd(), "storage", "logs");
     fs.mkdirSync(screenshotDir, { recursive: true });
@@ -158,10 +186,24 @@ async function run() {
     await page.screenshot({ path: screenshotPath, fullPage: true });
     console.log(`[Garena] Đã chụp form đổi mật khẩu tại ${screenshotPath}`);
 
-    console.log("[Garena] Đứng yên tại màn hình đổi mật khẩu, KHÔNG nhấn THAY ĐỔI.");
-    console.log(`[Garena] Mật khẩu mới dự kiến: ${newPassword}`);
-    // await page.locator('button:has-text("THAY ĐỔI")').click();
-    await page.waitForTimeout(20000);
+    console.log("[Garena] B7: Nhấn THAY ĐỔI (submit)");
+    const submitButton = page.locator(submitSelector);
+    await submitButton.scrollIntoViewIfNeeded();
+    await submitButton.click();
+    await humanPause(1500, 2500);
+
+    const successMessage = "Bạn đã đổi mật khẩu thành công.";
+    try {
+        await page.waitForSelector(`text=${successMessage}`, { timeout: 10000 });
+        console.log(`[Garena] ${successMessage}`);
+    } catch (error) {
+        throw new Error(
+            "[Garena] Không thấy thông báo đổi mật khẩu thành công sau khi submit."
+        );
+    }
+
+    console.log("[Garena] Kết thúc, đợi thêm trước khi đóng.");
+    await page.waitForTimeout(5000);
 
     await context.close();
 }
@@ -170,3 +212,33 @@ run().catch((error) => {
     console.error("[Garena Playwright] Lỗi:", error);
     process.exit(1);
 });
+
+async function retryLoginIfNeeded(page, username, password) {
+    const loginSuccessSelector = 'text=Trang chủ';
+    try {
+        await page.waitForSelector(loginSuccessSelector, { timeout: 8000 });
+        return;
+    } catch (_) {
+        console.log("[Garena] Login không thành công, gõ lại chính xác.");
+    }
+
+    await typeExact(page, loginInputSelector, username);
+    await humanPause(200, 400);
+    await typeExact(page, passwordInputSelector, password);
+    await humanPause(200, 400);
+    await page.locator('button:has-text("Đăng Nhập Ngay")').click();
+    await page.waitForSelector(loginSuccessSelector, { timeout: 15000 });
+}
+
+function passwordMeetsPolicy(value) {
+    if (!value || value.length < 8 || value.length > 16) {
+        return false;
+    }
+
+    const hasUpper = /[A-Z]/.test(value);
+    const hasLower = /[a-z]/.test(value);
+    const hasDigit = /\d/.test(value);
+    const hasSpecial = /[^A-Za-z0-9]/.test(value);
+
+    return hasUpper && hasLower && hasDigit && hasSpecial;
+}

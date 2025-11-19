@@ -37,6 +37,9 @@
         <div>
             <label class="text-xs text-slate-500 font-semibold uppercase">Mật khẩu mới</label>
             <input type="password" name="new_password" value="{{ old('new_password', $credential->new_password ?? '') }}" class="mt-1 p-3 border w-full rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm" placeholder="Password#2025" required>
+            <span class="text-xs text-gray-500 mt-0">Gợi ý: Dùng ít nhất 8 ký tự.
+Kết hợp các ký tự a-z, số 0-9 và một số ký tự đặc biệt.
+Không nên sử dụng những chuỗi dễ đoán như ngày sinh trong mật khẩu.</span>
         </div>
         <div>
             <label class="text-xs text-slate-500 font-semibold uppercase">Proxy Key</label>
