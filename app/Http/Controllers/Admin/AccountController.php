@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAccountRequest;
+use App\Http\Requests\UpdateAccountRequest;
 use App\Models\Account;
 use App\Models\ProxyKey;
 use Illuminate\Http\Request;
@@ -70,6 +72,7 @@ class AccountController extends Controller
 
             if ($login === '' || $password === '') {
                 $skipped++;
+
                 continue;
             }
 
@@ -91,9 +94,39 @@ class AccountController extends Controller
             ->with('status', "Import hoàn tất: {$inserted} mới, {$updated} cập nhật, {$skipped} bỏ qua.");
     }
 
+    public function store(StoreAccountRequest $request)
+    {
+        $data = $request->validated();
+
+        Account::create([
+            'login' => $data['login'],
+            'current_password' => $data['current_password'],
+            'next_password' => $data['next_password'] ?? null,
+            'status' => $data['status'] ?? 'pending',
+            'last_error' => $data['last_error'] ?? null,
+        ]);
+
+        return back()->with('status', 'Đã thêm tài khoản mới.');
+    }
+
+    public function update(UpdateAccountRequest $request, Account $account)
+    {
+        $data = $request->validated();
+
+        $account->update([
+            'login' => $data['login'],
+            'current_password' => $data['current_password'],
+            'next_password' => $data['next_password'] ?? null,
+            'status' => $data['status'] ?? $account->status,
+            'last_error' => $data['last_error'] ?? null,
+        ]);
+
+        return back()->with('status', 'Đã cập nhật tài khoản.');
+    }
+
     public function export()
     {
-        $filename = 'accounts_' . now()->format('Ymd_His') . '.csv';
+        $filename = 'accounts_'.now()->format('Ymd_His').'.csv';
 
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
@@ -134,6 +167,30 @@ class AccountController extends Controller
         ]);
 
         return redirect()->route('admin.dashboard')->with('status', 'Đã thêm key proxy mới.');
+    }
+
+    public function updateProxyKey(Request $request, ProxyKey $proxy)
+    {
+        $data = $request->validate([
+            'label' => ['required', 'string', 'max:100'],
+            'api_key' => ['required', 'string'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $proxy->update([
+            'label' => $data['label'],
+            'api_key' => $data['api_key'],
+            'is_active' => $request->boolean('is_active', $proxy->is_active),
+        ]);
+
+        return back()->with('status', 'Đã cập nhật key proxy.');
+    }
+
+    public function destroyProxyKey(ProxyKey $proxy)
+    {
+        $proxy->delete();
+
+        return back()->with('status', 'Đã xóa key proxy.');
     }
 
     public function startProxy(ProxyKey $proxy)
@@ -178,8 +235,6 @@ class AccountController extends Controller
             $message = $payload['message'] ?? __('Proxy đã cấp IP mới.');
             $ipInfo = $payload['proxyhttp'] ?? ($payload['proxysocks5'] ?? '');
 
-            // TODO: dispatch job to actually run Dusk with this key.
-
             return redirect()->route('admin.dashboard')
                 ->with('status', "Key {$proxy->label} đã khởi động, IP: {$ipInfo}. {$message}");
         } catch (\Throwable $e) {
@@ -188,7 +243,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể gọi API proxy để khởi động key: ' . $e->getMessage());
+            return back()->withErrors('Không thể gọi API proxy để khởi động key: '.$e->getMessage());
         }
     }
 
@@ -236,7 +291,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể gọi API proxy: ' . $e->getMessage());
+            return back()->withErrors('Không thể gọi API proxy: '.$e->getMessage());
         }
     }
 
@@ -288,7 +343,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể xoay IP: ' . $e->getMessage());
+            return back()->withErrors('Không thể xoay IP: '.$e->getMessage());
         }
     }
 

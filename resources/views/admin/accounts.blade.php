@@ -16,7 +16,10 @@
                     </label>
                     <span class="text-[11px] text-slate-400">login|password</span>
                 </form>
-                <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white">Xuất CSV</a>
+                <button type="button" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white cursor-pointer" uk-toggle="target: #account-create-modal">
+                    Thêm thủ công
+                </button>
+                <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white cursor-pointer">Xuất CSV</a>
             </div>
         </div>
         @if (session('status'))
@@ -56,6 +59,7 @@
                                     'success' => 'bg-emerald-100 text-emerald-800',
                                     'pending' => 'bg-amber-100 text-amber-800',
                                     'failed' => 'bg-rose-100 text-rose-700',
+                                    'processing' => 'bg-blue-100 text-blue-700',
                                 ];
                                 $pillClass = $statusStyles[$status] ?? 'bg-slate-100 text-slate-600';
                             @endphp
@@ -64,7 +68,14 @@
                             </span>
                         </td>
                         <td class="px-3 py-3 text-slate-500">{{ optional($account->last_attempted_at)->format('d/m/Y H:i') ?? '-' }}</td>
-                        <td class="px-3 py-3 text-slate-500">{{ \Illuminate\Support\Str::limit($account->last_error ?? '-', 40) }}</td>
+                        <td class="px-3 py-3 text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <span>{{ \Illuminate\Support\Str::limit($account->last_error ?? '-', 40) }}</span>
+                                <button type="button" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer" uk-toggle="target: #account-edit-{{ $account->id }}">
+                                    Sửa
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>
@@ -78,4 +89,87 @@
             {{ $accounts->links() }}
         </div>
     </div>
+
+    <div id="account-create-modal" uk-modal>
+        <div class="uk-modal-dialog uk-modal-body rounded-2xl">
+            <h3 class="text-lg font-semibold text-slate-900 mb-4">Thêm tài khoản</h3>
+            <form method="POST" action="{{ route('admin.accounts.store') }}" class="space-y-3 text-sm">
+                @csrf
+                <div>
+                    <label class="text-slate-600 text-xs font-semibold uppercase">Login</label>
+                    <input type="text" name="login" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2" required>
+                </div>
+                <div>
+                    <label class="text-slate-600 text-xs font-semibold uppercase">Mật khẩu hiện tại</label>
+                    <input type="text" name="current_password" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2" required>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-600 text-xs font-semibold uppercase">Mật khẩu mới</label>
+                        <input type="text" name="next_password" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="text-slate-600 text-xs font-semibold uppercase">Trạng thái</label>
+                        <select name="status" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2">
+                            <option value="pending">pending</option>
+                            <option value="processing">processing</option>
+                            <option value="success">success</option>
+                            <option value="failed">failed</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-slate-600 text-xs font-semibold uppercase">Lỗi gần nhất (tuỳ chọn)</label>
+                    <textarea name="last_error" rows="2" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2"></textarea>
+                </div>
+                <div class="flex items-center justify-end gap-2">
+                    <button type="button" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 cursor-pointer" uk-toggle="target: #account-create-modal">Huỷ</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold cursor-pointer">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @foreach($accounts as $account)
+        <div id="account-edit-{{ $account->id }}" uk-modal>
+            <div class="uk-modal-dialog uk-modal-body rounded-2xl">
+                <h3 class="text-lg font-semibold text-slate-900 mb-4">Chỉnh sửa tài khoản</h3>
+                <form method="POST" action="{{ route('admin.accounts.update', $account) }}" class="space-y-3 text-sm">
+                    @csrf
+                    @method('PUT')
+                    <div>
+                        <label class="text-slate-600 text-xs font-semibold uppercase">Login</label>
+                        <input type="text" name="login" value="{{ $account->login }}" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label class="text-slate-600 text-xs font-semibold uppercase">Mật khẩu hiện tại</label>
+                        <input type="text" name="current_password" value="{{ $account->current_password }}" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2" required>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-slate-600 text-xs font-semibold uppercase">Mật khẩu mới</label>
+                            <input type="text" name="next_password" value="{{ $account->next_password }}" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="text-slate-600 text-xs font-semibold uppercase">Trạng thái</label>
+                            @php($statusValue = strtolower($account->status ?? 'pending'))
+                            <select name="status" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2">
+                                @foreach(['pending', 'processing', 'success', 'failed'] as $statusOption)
+                                    <option value="{{ $statusOption }}" @selected($statusValue === $statusOption)>{{ $statusOption }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-slate-600 text-xs font-semibold uppercase">Lỗi gần nhất (tuỳ chọn)</label>
+                        <textarea name="last_error" rows="2" class="w-full mt-1 rounded-xl border border-slate-200 px-3 py-2">{{ $account->last_error }}</textarea>
+                    </div>
+                    <div class="flex items-center justify-end gap-2">
+                        <button type="button" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 cursor-pointer" uk-toggle="target: #account-edit-{{ $account->id }}">Huỷ</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold cursor-pointer">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
 @endsection
