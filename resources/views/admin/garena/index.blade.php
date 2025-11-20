@@ -1,9 +1,9 @@
-@extends('layouts.admin', ['activeNav' => 'tests', 'title' => 'Garena Test Runner'])
+@extends('layouts.admin', ['activeNav' => 'garena', 'title' => 'Garena Test Runner'])
 
 @section('content')
 <header class="flex flex-col gap-2">
     <h2 class="text-3xl font-semibold text-slate-900">Garena Test Runner</h2>
-    <p class="text-sm text-slate-500">Chạy Playwright script đăng nhập Garena và dừng lại trước bước đổi mật khẩu. Theo dõi log bên dưới để xem từng hành động.</p>
+    <p class="text-sm text-slate-500">Chạy Playwright đăng nhập Garena và đổi mật khẩu, theo dõi log bên dưới để xem tiến trình.</p>
 </header>
 
 @if (session('status'))
@@ -19,8 +19,8 @@
 @endphp
 <div class="rounded-2xl bg-white shadow-sm border border-white p-6 space-y-4">
     <h3 class="text-base font-semibold text-slate-900">Thông tin đăng nhập Garena</h3>
-    <p class="text-xs text-slate-500">Chọn tài khoản đã import và thêm mật khẩu mới, tuỳ chọn proxy trước khi chạy Playwright.</p>
-    <form method="POST" action="{{ route('admin.tests.garena.credentials') }}" class="space-y-3">
+    <p class="text-xs text-slate-500">Chọn tài khoản đã import, nhập mật khẩu mới và chọn proxy (nếu cần) trước khi chạy Playwright.</p>
+    <form method="POST" action="{{ route('admin.garena.credentials') }}" class="space-y-3">
         @csrf
         <div>
             <label class="text-xs text-slate-500 font-semibold uppercase">Tài khoản Garena</label>
@@ -32,14 +32,14 @@
                     </option>
                 @endforeach
             </select>
-            <p class="text-xs text-slate-400 mt-1">Danh sách chỉ hiển thị tài khoản có mật khẩu hiện tại.</p>
+            <p class="text-xs text-slate-400 mt-1">Chỉ hiển thị tài khoản đã có mật khẩu hiện tại.</p>
         </div>
         <div>
             <label class="text-xs text-slate-500 font-semibold uppercase">Mật khẩu mới</label>
-            <input type="password" name="new_password" value="{{ old('new_password', $credential->new_password ?? '') }}" class="mt-1 p-3 border w-full rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm" placeholder="Password#2025" required>
-            <span class="text-xs text-gray-500 mt-0">Gợi ý: Dùng ít nhất 8 ký tự.
-Kết hợp các ký tự a-z, số 0-9 và một số ký tự đặc biệt.
-Không nên sử dụng những chuỗi dễ đoán như ngày sinh trong mật khẩu.</span>
+            <input type="text" name="new_password" value="{{ old('new_password', $credential->new_password ?? '') }}" class="mt-1 p-3 border w-full rounded-xl border-slate-200 focus:border-slate-900 focus:ring-slate-900 text-sm" placeholder="Password#2025" required>
+            <span class="text-xs text-gray-500 mt-0">
+                Gợi ý: 8-16 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt. Tránh dùng chuỗi dễ đoán như ngày sinh.
+            </span>
         </div>
         <div>
             <label class="text-xs text-slate-500 font-semibold uppercase">Proxy Key</label>
@@ -59,10 +59,10 @@ Không nên sử dụng những chuỗi dễ đoán như ngày sinh trong mật 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-semibold cursor-pointer">Lưu</button>
             <button type="submit"
-                    formaction="{{ route('admin.tests.garena.run') }}"
+                    formaction="{{ route('admin.garena.run') }}"
                     class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold cursor-pointer">Chạy test</button>
         </div>
-        <p class="text-xs text-slate-500">Playwright sẽ sử dụng tài khoản, mật khẩu mới và proxy (nếu có) phía trên và ghi log vào <code>storage/logs/garena-test.log</code>.</p>
+        <p class="text-xs text-slate-500">Playwright sẽ dùng tài khoản, mật khẩu mới và proxy (nếu có) ở trên và ghi log vào <code>storage/logs/garena-test.log</code>.</p>
     </form>
 </div>
 

@@ -22,7 +22,7 @@
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'key' => 'dashboard'],
                 ['label' => 'Proxy Keys', 'route' => 'admin.proxies.index', 'key' => 'proxies'],
                 ['label' => 'Accounts', 'route' => 'admin.accounts.list', 'key' => 'accounts'],
-                ['label' => 'Garena Test', 'route' => 'admin.tests.garena', 'key' => 'tests'],
+                ['label' => 'Garena Test', 'route' => 'admin.garena.index', 'key' => 'garena'],
                 ])
                 @foreach ($navItems as $item)
                 @php($isActive = $activeNav === $item['key'])

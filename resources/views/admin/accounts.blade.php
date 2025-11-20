@@ -50,7 +50,18 @@
                         <td class="px-3 py-3">{{ $account->current_password ? \Illuminate\Support\Str::limit($account->current_password, 30) : 'Chưa nhập' }}</td>
                         <td class="px-3 py-3">{{ $account->next_password ? \Illuminate\Support\Str::limit($account->next_password, 30) : 'Chưa đổi' }}</td>
                         <td class="px-3 py-3">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs bg-slate-100 text-slate-600">{{ $account->status }}</span>
+                            @php
+                                $status = strtolower($account->status ?? 'pending');
+                                $statusStyles = [
+                                    'success' => 'bg-emerald-100 text-emerald-800',
+                                    'pending' => 'bg-amber-100 text-amber-800',
+                                    'failed' => 'bg-rose-100 text-rose-700',
+                                ];
+                                $pillClass = $statusStyles[$status] ?? 'bg-slate-100 text-slate-600';
+                            @endphp
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $pillClass }}">
+                                {{ $account->status }}
+                            </span>
                         </td>
                         <td class="px-3 py-3 text-slate-500">{{ optional($account->last_attempted_at)->format('d/m/Y H:i') ?? '-' }}</td>
                         <td class="px-3 py-3 text-slate-500">{{ \Illuminate\Support\Str::limit($account->last_error ?? '-', 40) }}</td>

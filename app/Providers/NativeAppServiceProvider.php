@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Native\Desktop\Facades\Window;
 use Native\Desktop\Contracts\ProvidesPhpIni;
+use Native\Desktop\Facades\Window;
 
 class NativeAppServiceProvider implements ProvidesPhpIni
 {
@@ -13,15 +13,10 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
-        Window::open([
-            'title' => 'Garena Test Runner',
-            'width' => 1280,
-            'height' => 860,
-            'minWidth' => 1100,
-            'minHeight' => 720,
-            'resizable' => true,
-            'backgroundColor' => '#f1f5f9',
-        ]);
+        Window::open()
+            ->title('Garena Tool')
+            ->width(1600)
+            ->height(800);
     }
 
     /**

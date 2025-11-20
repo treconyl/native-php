@@ -26,12 +26,12 @@ class TestController extends Controller
         $proxyKeys = ProxyKey::orderBy('label')->get();
         $credential = GarenaTestCredential::first();
 
-        return view('admin.tests.garena', [
+        return view('admin.garena.index', [
             'logLines' => $logLines,
             'credential' => $credential,
             'accounts' => $accounts,
             'proxyKeys' => $proxyKeys,
-            'activeNav' => 'tests',
+            'activeNav' => 'garena',
             'title' => 'Garena Test Runner',
         ]);
     }

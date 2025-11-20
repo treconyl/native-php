@@ -12,7 +12,7 @@ const timezone = process.env.PLAYWRIGHT_TIMEZONE || "Asia/Ho_Chi_Minh";
 const locale = process.env.PLAYWRIGHT_LOCALE || "vi-VN";
 
 if (!username || !password) {
-    console.error("Thiếu GARENA_USERNAME hoặc GARENA_PASSWORD trong biến môi trường.");
+    console.error("Thiếu GARENA_USERNAME hoặc GARENA_PASSWORD trong môi trường.");
     process.exit(1);
 }
 
@@ -29,7 +29,7 @@ const passwordInputSelector = 'input[placeholder="Mật khẩu"]';
 const oldPasswordSelector = "#J-form-curpwd";
 const newPasswordSelector = "#J-form-newpwd";
 const confirmPasswordSelector = 'input[placeholder="Xác nhận Mật khẩu mới"]';
-const submitSelector = 'button:has-text("THAY ĐỔI")';
+const submitButtonRole = { name: /thay/i };
 
 const randomInt = (min, max) =>
     Math.floor(Math.random() * (max - min + 1)) + min;
@@ -177,26 +177,18 @@ async function run() {
     await humanPause(350, 650);
     await typeExact(page, confirmPasswordSelector, newPassword);
 
-    const screenshotDir = path.join(process.cwd(), "storage", "logs");
-    fs.mkdirSync(screenshotDir, { recursive: true });
-    const screenshotPath = path.join(
-        screenshotDir,
-        `garena-change-form-${Date.now()}.png`
-    );
-    await page.screenshot({ path: screenshotPath, fullPage: true });
-    console.log(`[Garena] Đã chụp form đổi mật khẩu tại ${screenshotPath}`);
-
     console.log("[Garena] B7: Nhấn THAY ĐỔI (submit)");
-    const submitButton = page.locator(submitSelector);
+    const submitButton = page.getByRole("button", submitButtonRole);
+    await submitButton.waitFor({ timeout: 15000 });
     await submitButton.scrollIntoViewIfNeeded();
     await submitButton.click();
     await humanPause(1500, 2500);
 
     const successMessage = "Bạn đã đổi mật khẩu thành công.";
     const verificationSelectors = [
-        'text=Xác minh thiết bị',
-        'text=Device Verification',
-        'text=Thiết bị'
+        "text=Xác minh thiết bị",
+        "text=Device Verification",
+        "text=Thiết bị",
     ];
 
     try {
@@ -211,7 +203,7 @@ async function run() {
                     );
                 }
             } catch {
-                // ignore if selector không tìm thấy
+                // selector not found, ignore
             }
         }
 
