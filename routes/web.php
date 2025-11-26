@@ -14,6 +14,7 @@ Route::put('/accounts/{account}', [AccountController::class, 'update'])->name('a
 Route::get('/garena', [TestController::class, 'garena'])->name('admin.garena.index');
 Route::post('/garena/credentials', [TestController::class, 'saveGarenaCredentials'])->name('admin.garena.credentials');
 Route::post('/garena/run', [TestController::class, 'runGarena'])->name('admin.garena.run');
+Route::post('/garena/run-multi', [TestController::class, 'runGarenaMulti'])->name('admin.garena.run_multi');
 
 Route::post('/accounts/import', [AccountController::class, 'import'])->name('admin.accounts.import');
 Route::get('/accounts/export', [AccountController::class, 'export'])->name('admin.accounts.export');

@@ -26,7 +26,7 @@
                 ])
                 @foreach ($navItems as $item)
                 @php($isActive = $activeNav === $item['key'])
-                <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition
+                <a href="{{ route($item['route']) }}" class="group flex items-center gap-3 px-4 py-3 rounded-2xl transition no-underline
                        {{ $isActive
                             ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/25'
                             : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 border border-transparent hover:border-slate-200' }}">

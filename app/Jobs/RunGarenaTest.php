@@ -18,9 +18,6 @@ class RunGarenaTest implements ShouldQueue
 
     public function __construct(public array $credentials) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
         $script = base_path('playwright/garena-runner.js');
@@ -56,7 +53,7 @@ class RunGarenaTest implements ShouldQueue
         $process->run(function ($type, $buffer) {
             $lines = array_filter(explode("\n", $buffer));
             foreach ($lines as $line) {
-                Log::channel('garena_test')->info('[Garena Test Output] ' . $line);
+                Log::channel('garena_test')->info('[Garena Test Output] '.$line);
             }
         });
 
@@ -70,15 +67,18 @@ class RunGarenaTest implements ShouldQueue
             $this->updateAccount([
                 'status' => 'failed',
                 'last_attempted_at' => now(),
-                'last_error' => Str::limit(trim($errorOutput), 1000),
+                'last_error' => Str::limit(trim('[Playwright] '.$errorOutput), 1000),
+                'next_password' => null,
             ]);
+
+            $this->queueNext();
 
             return;
         }
 
         $this->updateAccount([
             'status' => 'success',
-            'current_password' => null,
+            'current_password' => $this->credentials['new_password'] ?? null,
             'next_password' => $this->credentials['new_password'] ?? null,
             'last_attempted_at' => now(),
             'last_succeeded_at' => now(),
@@ -86,6 +86,8 @@ class RunGarenaTest implements ShouldQueue
         ]);
 
         Log::channel('garena_test')->info('[Garena Test Job] Hoàn tất');
+
+        $this->queueNext();
     }
 
     protected function updateAccount(array $attributes): void
@@ -97,5 +99,18 @@ class RunGarenaTest implements ShouldQueue
         }
 
         Account::whereKey($accountId)->update($attributes);
+    }
+
+    protected function queueNext(): void
+    {
+        if (! ($this->credentials['multi_run'] ?? false)) {
+            return;
+        }
+
+        $proxyId = $this->credentials['proxy_key_id'] ?? null;
+
+        if ($proxyId) {
+            ProcessPendingAccounts::dispatch($proxyId)->onQueue($this->queue);
+        }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessPendingAccounts;
 use App\Jobs\RunGarenaTest;
 use App\Models\Account;
 use App\Models\GarenaTestCredential;
@@ -76,6 +77,21 @@ class TestController extends Controller
         Log::channel('garena_test')->info('[Garena Test] Đã cập nhật thông tin đăng nhập.');
 
         return back()->with('status', 'Đã lưu thông tin đăng nhập Garena.');
+    }
+
+    public function runGarenaMulti(Request $request)
+    {
+        $proxies = ProxyKey::where('is_active', true)->orderBy('label')->get();
+
+        foreach ($proxies as $proxy) {
+            ProcessPendingAccounts::dispatch($proxy->id);
+        }
+
+        if ($proxies->isEmpty()) {
+            return back()->withErrors('Không có proxy active để chạy.');
+        }
+
+        return back()->with('status', "Đã khởi chạy {$proxies->count()} luồng theo proxy active.");
     }
 
     /**

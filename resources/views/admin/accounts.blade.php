@@ -20,6 +20,12 @@
                     Thêm thủ công
                 </button>
                 <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white cursor-pointer">Xuất CSV</a>
+                <form method="POST" action="{{ route('admin.garena.run_multi') }}">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold cursor-pointer">
+                        Chạy tất cả proxy (account pending)
+                    </button>
+                </form>
             </div>
         </div>
         @if (session('status'))

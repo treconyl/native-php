@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'garena' => [
+        'default_new_password' => env('GARENA_DEFAULT_NEW_PASSWORD', 'Password#2025'),
+    ],
 ];
