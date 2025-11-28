@@ -94,13 +94,6 @@ class TestController extends Controller
         return back()->with('status', "Đã khởi chạy {$proxies->count()} luồng theo proxy active.");
     }
 
-    /**
-     * Validate and assemble payload for Garena credentials.
-     *
-     * @return array{0:\App\Models\Account,1:\App\Models\ProxyKey|null,2:array<string,mixed>}
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
     protected function prepareCredentialPayload(Request $request): array
     {
         $data = $request->validate([
@@ -113,6 +106,7 @@ class TestController extends Controller
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/',
             ],
             'proxy_key_id' => ['nullable', 'exists:proxy_keys,id'],
+            'headless' => ['nullable', 'boolean'],
         ], [
             'new_password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
             'new_password.regex' => 'Mật khẩu mới phải dài 8-16 ký tự và bao gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.',
@@ -137,6 +131,7 @@ class TestController extends Controller
             'password' => $account->current_password,
             'new_password' => $data['new_password'],
             'proxy_key_id' => $proxy?->id,
+            'headless' => $request->boolean('headless'),
         ];
 
         return [$account, $proxy, $payload];

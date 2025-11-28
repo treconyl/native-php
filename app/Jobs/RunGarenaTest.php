@@ -22,11 +22,14 @@ class RunGarenaTest implements ShouldQueue
     {
         $script = base_path('playwright/garena-runner.js');
         $command = ['node', $script];
+        $headlessRequested = array_key_exists('headless', $this->credentials)
+            ? ($this->credentials['headless'] ? 'true' : 'false')
+            : env('PLAYWRIGHT_HEADLESS', 'false');
         $env = array_merge($_SERVER, $_ENV, [
             'GARENA_USERNAME' => $this->credentials['username'],
             'GARENA_PASSWORD' => $this->credentials['password'],
             'GARENA_NEW_PASSWORD' => $this->credentials['new_password'] ?? 'Password#2025',
-            'PLAYWRIGHT_HEADLESS' => env('PLAYWRIGHT_HEADLESS', 'false'),
+            'PLAYWRIGHT_HEADLESS' => $headlessRequested,
             'GARENA_ACCOUNT_ID' => $this->credentials['account_id'] ?? $this->credentials['username'],
         ]);
 

@@ -113,7 +113,7 @@
                             @php($isExpired = $rotatedAt ? $rotatedAt->lt(now()->subMinute()) : true)
                             @php($isRunning = $proxy->status === 'running' && ! $isExpired)
                             @php($statusClass = $isRunning ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-700')
-                            @php($statusLabel = $isRunning ? '�ang ch?y' : 'H?t h?n')
+                            @php($statusLabel = $isRunning ? 'Đang chạy' : 'Hết hạn')
                             @php($ipDisplay = $currentHttp ? $currentHttp . (($proxyUser && $proxyPass) ? ':' . $proxyUser . ':' . $proxyPass : '') : null)
                             <tr class="border-t border-slate-100">
                                 <td class="px-4 py-3">{{ $proxy->label }}</td>
@@ -125,24 +125,24 @@
                                 <td class="px-4 py-3 text-xs text-slate-600">
                                     @if($ipDisplay)
                                         <div class="font-mono">{{ $ipDisplay }}</div>
-                                        <div class="text-[11px] text-slate-400">C?p nh?t: {{ $rotatedAt?->format('d/m/Y H:i:s') ?? 'Chua c�' }}</div>
+                                        <div class="text-[11px] text-slate-400">Cập nhật: {{ $rotatedAt?->format('d/m/Y H:i:s') ?? 'Chưa có' }}</div>
                                     @else
-                                        <span class="text-slate-400">Chua c� IP</span>
+                                        <span class="text-slate-400">Chưa có IP</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">{{ optional($proxy->last_used_at)->format('d/m/Y H:i') ?? 'Chua s? d?ng' }}</td>
+                                <td class="px-4 py-3">{{ optional($proxy->last_used_at)->format('d/m/Y H:i') ?? 'Chưa sử dụng' }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
                                         @if($proxy->status !== 'running')
                                             <form method="POST" action="{{ route('admin.proxy.start', $proxy) }}">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs cursor-pointer">Ch?y</button>
+                                                <button type="submit" class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs cursor-pointer">Chạy</button>
                                             </form>
                                         @endif
                                         @if($proxy->status === 'running')
                                             <form method="POST" action="{{ route('admin.proxy.stop', $proxy) }}">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs cursor-pointer">D?ng</button>
+                                                <button type="submit" class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs cursor-pointer">Dừng</button>
                                             </form>
                                         @endif
                                         <form method="POST" action="{{ route('admin.proxy.test', $proxy) }}">
@@ -160,7 +160,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-4 py-6 text-center text-slate-400">Chua c� key n�o.</td>
+                                <td colspan="5" class="px-4 py-6 text-center text-slate-400">Chưa có key nào.</td>
                             </tr>
                         @endforelse
                         </tbody>
@@ -170,7 +170,6 @@
         </section>
     </div>
 @endsection
-
 
 
 

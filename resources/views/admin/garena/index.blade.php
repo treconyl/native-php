@@ -52,6 +52,10 @@
                 @endforeach
             </select>
         </div>
+        <label class="inline-flex items-center gap-2 text-sm text-slate-600">
+            <input type="checkbox" name="headless" value="1" class="rounded border-slate-300" {{ old('headless') ? 'checked' : '' }}>
+            Chạy ẩn (PLAYWRIGHT_HEADLESS)
+        </label>
         @if ($credential)
         <p class="text-xs text-slate-400">Đã lưu lần cuối: {{ $credential->updated_at->diffForHumans() }}</p>
         @endif
