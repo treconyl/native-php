@@ -13,7 +13,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ProcessPendingAccounts implements ShouldQueue
 {
@@ -104,13 +103,13 @@ class ProcessPendingAccounts implements ShouldQueue
 
             if ($statusCode !== 100) {
                 if (in_array((string) $statusCode, ['101', '102'], true)) {
-                    $proxy->update([
-                        'status' => 'expired',
-                        'is_active' => false,
-                        'meta' => array_merge($meta, [
-                            'last_proxy_response' => $data,
-                        ]),
+                    Log::warning('Proxy rotate returned expired status, skipping without disabling', [
+                        'proxy_key_id' => $proxy->id,
+                        'status' => $statusCode,
+                        'response' => $data,
                     ]);
+
+                    $this->release(60);
 
                     return false;
                 }
@@ -168,6 +167,6 @@ class ProcessPendingAccounts implements ShouldQueue
             $chars[] = $pool[random_int(0, strlen($pool) - 1)];
         }
 
-        return Str::shuffle(implode('', $chars));
+        return str_shuffle(implode('', $chars));
     }
 }

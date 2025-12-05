@@ -54,11 +54,12 @@
                     <th class="px-3 py-2 text-left">API Key</th>
                     <th class="px-3 py-2 text-left">Trạng thái</th>
                     <th class="px-3 py-2 text-left">IP hiện tại</th>
+                    <th class="px-3 py-2 text-left">Hết hạn</th>
                     <th class="px-3 py-2 text-left">Lần dùng gần nhất</th>
                     <th class="px-3 py-2 text-left">Hành động</th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 @forelse($proxyKeys as $proxy)
                 @php($meta = $proxy->meta ?? [])
                 @php($currentHttp = $meta['last_proxy_http'] ?? null)
@@ -87,6 +88,15 @@
                             </div>
                         @else
                             <span class="text-slate-400">Chưa có IP</span>
+                        @endif
+                    </td>
+                    <td class="px-3 py-2 text-sm text-slate-600">
+                        @php($expireAt = isset($meta['last_proxy_expire_at']) ? \Illuminate\Support\Carbon::parse($meta['last_proxy_expire_at']) : null)
+                        @if($expireAt)
+                            <div>{{ $expireAt->format('d/m/Y H:i') }}</div>
+                            <div class="text-[11px] text-slate-400">{{ $expireAt->diffForHumans() }}</div>
+                        @else
+                            <span class="text-slate-400">Chưa có</span>
                         @endif
                     </td>
                     <td class="px-3 py-2 text-sm text-slate-600">

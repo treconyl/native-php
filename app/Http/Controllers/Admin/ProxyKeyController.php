@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProxyKeyRequest;
 use App\Http\Requests\UpdateProxyKeyRequest;
 use App\Models\ProxyKey;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -68,6 +69,7 @@ class ProxyKeyController extends Controller
         try {
             $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
             $payload = $response->json();
+            $expireAt = $this->extractExpireAt($payload);
 
             Log::info('Proxy API start request', [
                 'proxy_key_id' => $proxy->id,
@@ -75,18 +77,9 @@ class ProxyKeyController extends Controller
                 'response' => $payload,
             ]);
 
-            if (($payload['status'] ?? null) !== 100) {
+            $statusCode = $payload['status'] ?? null;
+            if ($statusCode !== 100) {
                 $message = $payload['message'] ?? 'Không nhận được thông tin IP.';
-                $statusCode = $payload['status'] ?? 'N/A';
-                $isExpired = in_array((string) $statusCode, ['101', '102'], true);
-
-                $proxy->update([
-                    'status' => $isExpired ? 'expired' : $proxy->status,
-                    'is_active' => $isExpired ? false : $proxy->is_active,
-                    'meta' => array_merge($proxy->meta ?? [], [
-                        'last_proxy_response' => $payload,
-                    ]),
-                ]);
 
                 return back()->withErrors("Không thể khởi động key {$proxy->label} (status {$statusCode}): {$message}");
             }
@@ -103,6 +96,7 @@ class ProxyKeyController extends Controller
                     'last_proxy_username' => $payload['username'] ?? null,
                     'last_proxy_password' => $payload['password'] ?? null,
                     'last_proxy_rotated_at' => now()->toDateTimeString(),
+                    'last_proxy_expire_at' => $expireAt?->toDateTimeString(),
                 ]),
             ]);
 
@@ -153,6 +147,7 @@ class ProxyKeyController extends Controller
         try {
             $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
             $data = $response->json();
+            $expireAt = $this->extractExpireAt($data);
 
             Log::info('Proxy API test', [
                 'proxy_key_id' => $proxy->id,
@@ -163,7 +158,6 @@ class ProxyKeyController extends Controller
 
             $status = $data['status'] ?? null;
             $message = $data['message'] ?? 'Không có thông điệp trả về.';
-            $isExpired = in_array((string) $status, ['101', '102'], true);
 
             if ($status === 100) {
                 $proxy->update([
@@ -171,19 +165,12 @@ class ProxyKeyController extends Controller
                     'is_active' => true,
                     'meta' => array_merge($proxy->meta ?? [], [
                         'last_proxy_response' => $data,
+                        'last_proxy_expire_at' => $expireAt?->toDateTimeString(),
                     ]),
                 ]);
 
                 return back()->with('status', "Key {$proxy->label} OK: {$message}");
             }
-
-            $proxy->update([
-                'status' => $isExpired ? 'expired' : $proxy->status,
-                'is_active' => $isExpired ? false : $proxy->is_active,
-                'meta' => array_merge($proxy->meta ?? [], [
-                    'last_proxy_response' => $data,
-                ]),
-            ]);
 
             return back()->withErrors("Key {$proxy->label} trả về lỗi ({$status}): {$message}");
         } catch (\Throwable $e) {
@@ -208,6 +195,7 @@ class ProxyKeyController extends Controller
         try {
             $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
             $data = $response->json();
+            $expireAt = $this->extractExpireAt($data);
 
             Log::info('Proxy API rotate', [
                 'proxy_key_id' => $proxy->id,
@@ -219,15 +207,6 @@ class ProxyKeyController extends Controller
             if (($data['status'] ?? null) !== 100) {
                 $message = $data['message'] ?? 'Không có dữ liệu trả về.';
                 $statusCode = $data['status'] ?? 'N/A';
-                $isExpired = in_array((string) $statusCode, ['101', '102'], true);
-
-                $proxy->update([
-                    'status' => $isExpired ? 'expired' : $proxy->status,
-                    'is_active' => $isExpired ? false : $proxy->is_active,
-                    'meta' => array_merge($proxy->meta ?? [], [
-                        'last_proxy_response' => $data,
-                    ]),
-                ]);
 
                 return back()->withErrors("Không thể xoay IP cho key {$proxy->label} (status {$statusCode}): {$message}");
             }
@@ -246,6 +225,7 @@ class ProxyKeyController extends Controller
                     'last_proxy_username' => $data['username'] ?? null,
                     'last_proxy_password' => $data['password'] ?? null,
                     'last_proxy_rotated_at' => now()->toDateTimeString(),
+                    'last_proxy_expire_at' => $expireAt?->toDateTimeString(),
                 ]),
             ]);
 
@@ -259,5 +239,26 @@ class ProxyKeyController extends Controller
 
             return back()->withErrors('Không thể xoay IP: '.$e->getMessage());
         }
+    }
+
+    protected function extractExpireAt(array $payload): ?Carbon
+    {
+        if (is_numeric($payload['time_expire'] ?? null)) {
+            return Carbon::now()->addSeconds((int) $payload['time_expire']);
+        }
+
+        if (! empty($payload['message']) && preg_match('/(\d+)\s*s/', (string) $payload['message'], $matches)) {
+            return Carbon::now()->addSeconds((int) $matches[1]);
+        }
+
+        if (! empty($payload['Token expiration date'])) {
+            try {
+                return Carbon::createFromFormat('H:i d-m-Y', $payload['Token expiration date'], config('app.timezone'));
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+
+        return null;
     }
 }

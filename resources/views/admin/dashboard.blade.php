@@ -131,10 +131,9 @@
                             @php($proxyUser = $meta['last_proxy_username'] ?? null)
                             @php($proxyPass = $meta['last_proxy_password'] ?? null)
                             @php($rotatedAt = isset($meta['last_proxy_rotated_at']) ? \Illuminate\Support\Carbon::parse($meta['last_proxy_rotated_at']) : null)
-                            @php($isExpired = $rotatedAt ? $rotatedAt->lt(now()->subMinute()) : true)
-                            @php($isRunning = $proxy->status === 'running' && ! $isExpired)
+                            @php($isRunning = $proxy->status === 'running')
                             @php($statusClass = $isRunning ? 'bg-emerald-100 text-emerald-900' : 'bg-rose-100 text-rose-700')
-                            @php($statusLabel = $isRunning ? 'Đang chạy' : 'Hết hạn')
+                            @php($statusLabel = $isRunning ? 'Đang sử dụng' : 'Hết hạn')
                             @php($ipDisplay = $currentHttp ? $currentHttp . (($proxyUser && $proxyPass) ? ':' . $proxyUser . ':' . $proxyPass : '') : null)
                             <tr class="border-t border-slate-100">
                                 <td class="px-4 py-3">{{ $proxy->label }}</td>
@@ -151,30 +150,33 @@
                                         <span class="text-slate-400">Chưa có IP</span>
                                     @endif
                                 </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">
+                                    @php($expireAt = isset($meta['last_proxy_expire_at']) ? \Illuminate\Support\Carbon::parse($meta['last_proxy_expire_at']) : null)
+                                    @if($expireAt)
+                                        <div>{{ $expireAt->format('d/m/Y H:i') }}</div>
+                                        <div class="text-[11px] text-slate-400">{{ $expireAt->diffForHumans() }}</div>
+                                    @else
+                                        <span class="text-slate-400">Chưa có</span>
+                                    @endif
+                                </td>
                                 <td class="px-4 py-3">{{ optional($proxy->last_used_at)->format('d/m/Y H:i') ?? 'Chưa sử dụng' }}</td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
-                                        @if($proxy->status !== 'running')
-                                            <form method="POST" action="{{ route('admin.proxy.start', $proxy) }}">
-                                                @csrf
-                                                <button type="submit" class="sunrise-chip sunrise-chip--ghost">Chạy</button>
-                                            </form>
-                                        @endif
-                                        @if($proxy->status === 'running')
-                                            <form method="POST" action="{{ route('admin.proxy.stop', $proxy) }}">
-                                                @csrf
-                                                <button type="submit" class="sunrise-chip sunrise-chip--rose">Dừng</button>
-                                            </form>
-                                        @endif
                                         <form method="POST" action="{{ route('admin.proxy.test', $proxy) }}">
                                             @csrf
                                             <input type="hidden" name="nhamang" value="random">
                                             <input type="hidden" name="tinhthanh" value="0">
-                                            <button type="submit" class="sunrise-chip sunrise-chip--ghost">Test API</button>
+                                            <button type="submit" class="sunrise-chip sunrise-chip--ghost">Kiểm tra</button>
                                         </form>
                                         <form method="POST" action="{{ route('admin.proxy.rotate', $proxy) }}">
                                             @csrf
-                                            <button type="submit" class="sunrise-chip">Xoay IP</button>
+                                            <button type="submit" class="sunrise-chip">Xoay</button>
+                                        </form>
+                                        <button type="button" class="sunrise-chip sunrise-chip--ghost" uk-toggle="target: #proxy-edit-{{ $proxy->id }}">Sửa</button>
+                                        <form method="POST" action="{{ route('admin.proxy.destroy', $proxy) }}" onsubmit="return confirm('Xóa key này?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="sunrise-chip sunrise-chip--rose">Xóa</button>
                                         </form>
                                     </div>
                                 </td>
