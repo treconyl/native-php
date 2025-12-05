@@ -386,10 +386,11 @@ class AccountController extends Controller
 
     public function accountList(Request $request)
     {
-        $query = Account::orderByDesc('id');
+        $query = Account::query();
 
         $search = trim((string) $request->input('search', ''));
         $status = strtolower((string) $request->input('status', ''));
+        $sort = $request->input('sort', 'newest');
 
         if ($search !== '') {
             $query->where('login', 'like', '%'.$search.'%');
@@ -399,6 +400,9 @@ class AccountController extends Controller
             $query->where('status', $status);
         }
 
+        $sortDirection = $sort === 'oldest' ? 'asc' : 'desc';
+        $query->orderBy('id', $sortDirection);
+
         $accounts = $query->paginate(30)->withQueryString();
 
         return view('admin.accounts', [
@@ -406,6 +410,7 @@ class AccountController extends Controller
             'filters' => [
                 'search' => $search,
                 'status' => $status,
+                'sort' => $sort,
             ],
             'activeNav' => 'accounts',
             'title' => 'Danh sách tài khoản',

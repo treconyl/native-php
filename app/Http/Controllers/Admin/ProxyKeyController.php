@@ -78,10 +78,11 @@ class ProxyKeyController extends Controller
             if (($payload['status'] ?? null) !== 100) {
                 $message = $payload['message'] ?? 'Không nhận được thông tin IP.';
                 $statusCode = $payload['status'] ?? 'N/A';
+                $isExpired = in_array((string) $statusCode, ['101', '102'], true);
 
                 $proxy->update([
-                    'status' => 'expired',
-                    'is_active' => false,
+                    'status' => $isExpired ? 'expired' : $proxy->status,
+                    'is_active' => $isExpired ? false : $proxy->is_active,
                     'meta' => array_merge($proxy->meta ?? [], [
                         'last_proxy_response' => $payload,
                     ]),
@@ -162,6 +163,7 @@ class ProxyKeyController extends Controller
 
             $status = $data['status'] ?? null;
             $message = $data['message'] ?? 'Không có thông điệp trả về.';
+            $isExpired = in_array((string) $status, ['101', '102'], true);
 
             if ($status === 100) {
                 $proxy->update([
@@ -176,8 +178,8 @@ class ProxyKeyController extends Controller
             }
 
             $proxy->update([
-                'status' => 'expired',
-                'is_active' => false,
+                'status' => $isExpired ? 'expired' : $proxy->status,
+                'is_active' => $isExpired ? false : $proxy->is_active,
                 'meta' => array_merge($proxy->meta ?? [], [
                     'last_proxy_response' => $data,
                 ]),
@@ -217,10 +219,11 @@ class ProxyKeyController extends Controller
             if (($data['status'] ?? null) !== 100) {
                 $message = $data['message'] ?? 'Không có dữ liệu trả về.';
                 $statusCode = $data['status'] ?? 'N/A';
+                $isExpired = in_array((string) $statusCode, ['101', '102'], true);
 
                 $proxy->update([
-                    'status' => 'expired',
-                    'is_active' => false,
+                    'status' => $isExpired ? 'expired' : $proxy->status,
+                    'is_active' => $isExpired ? false : $proxy->is_active,
                     'meta' => array_merge($proxy->meta ?? [], [
                         'last_proxy_response' => $data,
                     ]),

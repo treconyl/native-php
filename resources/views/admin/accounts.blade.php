@@ -67,6 +67,10 @@
                         </option>
                     @endforeach
                 </select>
+                <select name="sort" class="sunrise-input btn-sunrise-sm">
+                    <option value="newest" @selected(($filters['sort'] ?? 'newest') === 'newest')>Mới nhất</option>
+                    <option value="oldest" @selected(($filters['sort'] ?? '') === 'oldest')>Cũ nhất</option>
+                </select>
             </div>
             <button type="submit" class="btn-sunrise btn-sunrise-sm">Lọc</button>
         </form>

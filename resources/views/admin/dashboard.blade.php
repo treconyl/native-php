@@ -53,20 +53,22 @@
             ];
         @endphp
         @foreach($statCards as $card)
-            <article class="sunrise-card p-6 border-2 border-[#ffd0aa] shadow-[0_14px_0_#f7c69b] rounded-[26px]">
-                <h3 class="text-lg font-semibold text-slate-900">{{ $card['title'] }}</h3>
-                <p class="mt-3 text-3xl font-semibold text-slate-900">{{ $card['value'] }}</p>
-                <p class="mt-2 text-sm text-slate-500">{{ $card['meta'] }}</p>
-                @if(isset($card['breakdown']))
-                    <div class="mt-3 text-xs text-slate-500 space-y-1">
-                        <p>Hôm nay: <span class="font-semibold text-slate-800">{{ $card['breakdown']['today'] ?? 0 }}</span></p>
-                        <p>Tuần này: <span class="font-semibold text-slate-800">{{ $card['breakdown']['week'] ?? 0 }}</span></p>
-                        <p>Tháng này: <span class="font-semibold text-slate-800">{{ $card['breakdown']['month'] ?? 0 }}</span></p>
+            <article class="sunrise-card p-5 border border-[#ffd0aa] shadow-[0_10px_0_#f7c69b] rounded-[22px]">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="text-base font-semibold text-slate-900">{{ $card['title'] }}</h3>
+                        <p class="mt-2 text-3xl font-semibold text-slate-900">{{ $card['value'] }}</p>
+                        <p class="mt-1 text-sm text-slate-500">{{ $card['meta'] }}</p>
                     </div>
-                @endif
-                <div class="mt-4 flex items-center justify-between text-sm font-semibold text-[#f2783f]">
-                    <span>Chi tiết</span>
-                    <span>→</span>
+                    @if(isset($card['breakdown']))
+                        <div class="text-xs text-slate-500 text-right space-y-1 min-w-[120px]">
+                            <p>Hôm nay: <span class="font-semibold text-slate-800">{{ $card['breakdown']['today'] ?? 0 }}</span></p>
+                            <p>Tuần: <span class="font-semibold text-slate-800">{{ $card['breakdown']['week'] ?? 0 }}</span></p>
+                            <p>Tháng: <span class="font-semibold text-slate-800">{{ $card['breakdown']['month'] ?? 0 }}</span></p>
+                        </div>
+                    @else
+                        <span class="text-[#f2783f] text-xl leading-none">→</span>
+                    @endif
                 </div>
             </article>
         @endforeach
