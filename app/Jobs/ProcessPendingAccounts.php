@@ -103,13 +103,16 @@ class ProcessPendingAccounts implements ShouldQueue
 
             if ($statusCode !== 100) {
                 if (in_array((string) $statusCode, ['101', '102'], true)) {
-                    Log::warning('Proxy rotate returned expired status, skipping without disabling', [
+                    $waitSeconds = $this->parseExpireSeconds($data) ?: 60;
+
+                    Log::warning('Proxy rotate returned cooldown, delaying job', [
                         'proxy_key_id' => $proxy->id,
                         'status' => $statusCode,
                         'response' => $data,
+                        'wait' => $waitSeconds,
                     ]);
 
-                    $this->release(60);
+                    $this->release($waitSeconds);
 
                     return false;
                 }
@@ -168,5 +171,18 @@ class ProcessPendingAccounts implements ShouldQueue
         }
 
         return str_shuffle(implode('', $chars));
+    }
+
+    protected function parseExpireSeconds(array $payload): ?int
+    {
+        if (is_numeric($payload['time_expire'] ?? null)) {
+            return (int) $payload['time_expire'];
+        }
+
+        if (! empty($payload['message']) && preg_match('/(\d+)\s*s/', (string) $payload['message'], $matches)) {
+            return (int) $matches[1];
+        }
+
+        return null;
     }
 }
