@@ -129,6 +129,16 @@ class ProxyKeyController extends Controller
         return back()->with('status', "Đã yêu cầu dừng key {$proxy->label}");
     }
 
+    public function stopAll()
+    {
+        $stopped = ProxyKey::query()->update([
+            'stop_requested' => true,
+            'status' => 'idle',
+        ]);
+
+        return back()->with('status', "Đã yêu cầu dừng {$stopped} key proxy đang chạy.");
+    }
+
     public function test(ProxyKey $proxy, Request $request)
     {
         $params = [

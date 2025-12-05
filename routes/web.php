@@ -26,3 +26,4 @@ Route::post('/proxies/{proxy}/start', [ProxyKeyController::class, 'start'])->nam
 Route::post('/proxies/{proxy}/stop', [ProxyKeyController::class, 'stop'])->name('admin.proxy.stop');
 Route::post('/proxies/{proxy}/test', [ProxyKeyController::class, 'test'])->name('admin.proxy.test');
 Route::post('/proxies/{proxy}/rotate', [ProxyKeyController::class, 'rotate'])->name('admin.proxy.rotate');
+Route::post('/proxies/stop-all', [ProxyKeyController::class, 'stopAll'])->name('admin.proxy.stop_all');

@@ -13,10 +13,13 @@
     ])
 
     <header class="flex flex-col gap-2">
-        <p class="text-sm text-slate-500">https://fb.com/treconyl</p>
+        <p class="inline-flex items-center gap-2 text-sm text-[#1877f2] font-semibold">
+            <span class="text-lg"></span>
+            <a href="https://fb.com/treconyl" class="hover:underline text-[#1877f2]" target="_blank" rel="noopener">https://fb.com/treconyl</a>
+        </p>
         <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-3xl font-semibold text-slate-900">Tổng quan hệ thống</h2>
-            <a href="{{ route('admin.accounts.export') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-white">Xuất CSV</a>
+            <a href="{{ route('admin.accounts.export') }}" class="btn-sunrise-ghost text-sm px-6">Xuất CSV</a>
         </div>
         @if (session('status'))
             <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-700 text-sm">{{ session('status') }}</div>
@@ -27,46 +30,42 @@
     </header>
 
     <section class="grid gap-4 md:grid-cols-4">
-        <article class="rounded-2xl bg-white shadow-sm border border-white p-5">
+        <article class="sunrise-card p-5">
             <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Tổng tài khoản</p>
             <div class="text-3xl font-semibold text-slate-900">{{ $stats['total'] }}</div>
             <p class="text-xs text-slate-500 mt-1">{{ $stats['pending'] }} đang chờ xử lý</p>
         </article>
-        <article class="rounded-2xl bg-white shadow-sm border border-white p-5">
+        <article class="sunrise-card p-5">
             <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Thành công</p>
             <div class="text-3xl font-semibold text-emerald-600">{{ $stats['success'] }}</div>
             <p class="text-xs text-slate-500 mt-1">{{ number_format($stats['total'] ? ($stats['success']/max($stats['total'],1)*100) : 0, 1) }}% hoàn tất</p>
         </article>
-        <article class="rounded-2xl bg-white shadow-sm border border-white p-5">
+        <article class="sunrise-card p-5">
             <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Thất bại</p>
             <div class="text-3xl font-semibold text-rose-600">{{ $stats['failed'] }}</div>
             <p class="text-xs text-slate-500 mt-1">Theo dõi lỗi gần nhất</p>
         </article>
-        <article class="rounded-2xl bg-white shadow-sm border border-white p-5">
+        <article class="sunrise-card p-5">
             <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Proxy chạy</p>
             <div class="text-3xl font-semibold text-slate-900">{{ $stats['proxies_running'] }}</div>
             <p class="text-xs text-slate-500 mt-1">Trong {{ $stats['proxies_total'] }} key</p>
         </article>
-        <article class="rounded-2xl bg-white shadow-sm border border-white p-5 md:col-span-2">
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Lỗi gần nhất</p>
-            <div class="text-sm text-slate-600">{{ \Illuminate\Support\Str::limit($stats['latest_error'] ?? 'Chưa ghi nhận lỗi.', 160) }}</div>
-        </article>
     </section>
 
     <div class="grid gap-6">
-        <section id="proxy" class="rounded-2xl bg-white shadow-sm border border-white p-6 space-y-6">
+        <section id="proxy" class="sunrise-card p-6 space-y-6">
             <div class="grid gap-4 lg:grid-cols-2">
-                <div class="rounded-2xl border border-slate-200 p-4">
+                <div class="rounded-2xl border border-slate-200 p-4 bg-white/70">
                     <h3 class="font-semibold text-slate-900">Import tài khoản</h3>
                     <form method="POST" action="{{ route('admin.accounts.import') }}" enctype="multipart/form-data" class="flex flex-col gap-3 mt-4 text-sm">
                         @csrf
                         <label class="text-slate-500">File CSV/TXT</label>
                         <input type="file" name="file" accept=".txt,.csv" class="rounded-xl border border-dashed border-slate-300 px-4 py-3 text-sm" required>
-                        <button type="submit" class="rounded-xl bg-slate-900 text-white py-2 font-medium">Tải lên</button>
+                        <button type="submit" class="btn-sunrise justify-center">Tải lên</button>
                         <p class="text-xs text-slate-400">Định dạng: <code>login|password</code> hoặc <code>login,password</code></p>
                     </form>
                 </div>
-                <div class="rounded-2xl border border-slate-200 p-4">
+                <div class="rounded-2xl border border-slate-200 p-4 bg-white/70">
                     <h3 class="font-semibold text-slate-900">Thêm proxy key</h3>
                     <form method="POST" action="{{ route('admin.proxy.store') }}" class="flex flex-col gap-3 mt-4 text-sm">
                         @csrf
@@ -82,7 +81,7 @@
                             <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">
                             Kích hoạt ngay
                         </label>
-                        <button type="submit" class="rounded-xl bg-slate-900 text-white py-2 font-medium">Lưu key</button>
+                        <button type="submit" class="btn-sunrise justify-center">Lưu key</button>
                     </form>
                 </div>
             </div>
@@ -92,7 +91,7 @@
                     <h3 class="font-semibold text-slate-900">Danh sách key</h3>
                     <p class="text-xs text-slate-500">{{ $proxyKeys->count() }} key</p>
                 </div>
-                <div class="rounded-2xl border border-slate-200 overflow-hidden">
+                <div class="rounded-2xl border border-slate-200 overflow-hidden bg-white">
                     <table class="w-full text-sm">
                         <thead class="bg-slate-50 text-slate-500 uppercase text-xs">
                         <tr>
@@ -103,7 +102,7 @@
                             <th class="px-4 py-3 text-left">Hành động</th>
                         </tr>
                         </thead>
-                                                                        <tbody>
+                        <tbody>
                         @forelse($proxyKeys as $proxy)
                             @php($meta = $proxy->meta ?? [])
                             @php($currentHttp = $meta['last_proxy_http'] ?? null)
@@ -136,24 +135,24 @@
                                         @if($proxy->status !== 'running')
                                             <form method="POST" action="{{ route('admin.proxy.start', $proxy) }}">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs cursor-pointer">Chạy</button>
+                                                <button type="submit" class="sunrise-chip sunrise-chip--ghost">Chạy</button>
                                             </form>
                                         @endif
                                         @if($proxy->status === 'running')
                                             <form method="POST" action="{{ route('admin.proxy.stop', $proxy) }}">
                                                 @csrf
-                                                <button type="submit" class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs cursor-pointer">Dừng</button>
+                                                <button type="submit" class="sunrise-chip sunrise-chip--rose">Dừng</button>
                                             </form>
                                         @endif
                                         <form method="POST" action="{{ route('admin.proxy.test', $proxy) }}">
                                             @csrf
                                             <input type="hidden" name="nhamang" value="random">
                                             <input type="hidden" name="tinhthanh" value="0">
-                                            <button type="submit" class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs cursor-pointer">Test API</button>
+                                            <button type="submit" class="sunrise-chip sunrise-chip--ghost">Test API</button>
                                         </form>
                                         <form method="POST" action="{{ route('admin.proxy.rotate', $proxy) }}">
                                             @csrf
-                                            <button type="submit" class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs cursor-pointer">Xoay IP</button>
+                                            <button type="submit" class="sunrise-chip">Xoay IP</button>
                                         </form>
                                     </div>
                                 </td>
@@ -170,6 +169,4 @@
         </section>
     </div>
 @endsection
-
-
 

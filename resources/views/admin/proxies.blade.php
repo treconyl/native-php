@@ -12,7 +12,7 @@
         @endif
     </header>
 
-    <div class="rounded-2xl bg-white shadow-sm border border-white p-5 space-y-5">
+    <div class="sunrise-card p-5 space-y-5">
         <div class="grid gap-3 lg:grid-cols-2">
             <div class="rounded-2xl border border-slate-200 p-4 space-y-3">
                 <h3 class="font-semibold text-slate-900">Thêm proxy key</h3>
@@ -30,7 +30,7 @@
                         <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300 h-4 w-4">
                         Kích hoạt ngay
                     </label>
-                    <button type="submit" class="rounded-xl bg-slate-900 text-white py-2 font-semibold cursor-pointer text-sm">Lưu key</button>
+                    <button type="submit" class="btn-sunrise justify-center">Lưu key</button>
                 </form>
             </div>
             <div class="rounded-2xl border border-slate-200 p-4 space-y-2">
@@ -39,7 +39,7 @@
                 <p class="text-xs text-slate-400">Nhớ xoay IP sau mỗi phút để tránh bị chặn.</p>
             </div>
         </div>
-        <div class="rounded-2xl border border-slate-200 overflow-hidden">
+        <div class="rounded-2xl border border-slate-200 overflow-hidden bg-white">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 text-slate-500 uppercase text-[11px]">
                 <tr>
@@ -85,30 +85,30 @@
                                 @if($proxy->status !== 'running')
                                     <form method="POST" action="{{ route('admin.proxy.start', $proxy) }}">
                                         @csrf
-                                        <button type="submit" class="px-2.5 py-1 rounded-full bg-slate-900 text-white text-[11px] cursor-pointer">Chạy</button>
+                                        <button type="submit" class="sunrise-chip sunrise-chip--ghost">Chạy</button>
                                     </form>
                                 @endif
                                 @if($proxy->status === 'running')
                                     <form method="POST" action="{{ route('admin.proxy.stop', $proxy) }}">
                                         @csrf
-                                        <button type="submit" class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-[11px] cursor-pointer">Dừng</button>
+                                        <button type="submit" class="sunrise-chip sunrise-chip--rose">Dừng</button>
                                     </form>
                                 @endif
                                 <form method="POST" action="{{ route('admin.proxy.test', $proxy) }}">
                                     @csrf
                                     <input type="hidden" name="nhamang" value="random">
                                     <input type="hidden" name="tinhthanh" value="0">
-                                    <button type="submit" class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] cursor-pointer">Test API</button>
+                                    <button type="submit" class="sunrise-chip sunrise-chip--ghost">Test API</button>
                                 </form>
                                 <form method="POST" action="{{ route('admin.proxy.rotate', $proxy) }}">
                                     @csrf
-                                    <button type="submit" class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[11px] cursor-pointer">Xoay IP</button>
+                                    <button type="submit" class="sunrise-chip">Xoay IP</button>
                                 </form>
-                                <button type="button" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] cursor-pointer" uk-toggle="target: #proxy-edit-{{ $proxy->id }}">Sửa</button>
+                                <button type="button" class="sunrise-chip sunrise-chip--ghost" uk-toggle="target: #proxy-edit-{{ $proxy->id }}">Sửa</button>
                                 <form method="POST" action="{{ route('admin.proxy.destroy', $proxy) }}" onsubmit="return confirm('Xóa key này?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-[11px] cursor-pointer">Xóa</button>
+                                    <button type="submit" class="sunrise-chip sunrise-chip--rose">Xóa</button>
                                 </form>
                             </div>
                         </td>
@@ -143,8 +143,8 @@
                         Kích hoạt
                     </label>
                     <div class="flex items-center justify-end gap-2">
-                        <button type="button" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 cursor-pointer" uk-toggle="target: #proxy-edit-{{ $proxy->id }}">Huỷ</button>
-                        <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold cursor-pointer">Lưu</button>
+                        <button type="button" class="btn-sunrise-ghost" uk-toggle="target: #proxy-edit-{{ $proxy->id }}">Huỷ</button>
+                        <button type="submit" class="btn-sunrise">Lưu</button>
                     </div>
                 </form>
             </div>
