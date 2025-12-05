@@ -31,7 +31,7 @@ class ProxyKeyController extends Controller
             'label' => $data['label'],
             'api_key' => $data['api_key'],
             'is_active' => $request->boolean('is_active', true),
-            'status' => 'idle',
+            'status' => 'running',
         ]);
 
         return back()->with('status', 'Đã thêm key proxy mới.');
@@ -80,7 +80,7 @@ class ProxyKeyController extends Controller
                 $statusCode = $payload['status'] ?? 'N/A';
 
                 $proxy->update([
-                    'status' => 'idle',
+                    'status' => 'expired',
                     'is_active' => false,
                     'meta' => array_merge($proxy->meta ?? [], [
                         'last_proxy_response' => $payload,
@@ -123,7 +123,8 @@ class ProxyKeyController extends Controller
     {
         $proxy->update([
             'stop_requested' => true,
-            'status' => 'idle',
+            'status' => 'expired',
+            'is_active' => false,
         ]);
 
         return back()->with('status', "Đã yêu cầu dừng key {$proxy->label}");
@@ -133,7 +134,8 @@ class ProxyKeyController extends Controller
     {
         $stopped = ProxyKey::query()->update([
             'stop_requested' => true,
-            'status' => 'idle',
+            'status' => 'expired',
+            'is_active' => false,
         ]);
 
         return back()->with('status', "Đã yêu cầu dừng {$stopped} key proxy đang chạy.");
@@ -162,11 +164,19 @@ class ProxyKeyController extends Controller
             $message = $data['message'] ?? 'Không có thông điệp trả về.';
 
             if ($status === 100) {
+                $proxy->update([
+                    'status' => 'running',
+                    'is_active' => true,
+                    'meta' => array_merge($proxy->meta ?? [], [
+                        'last_proxy_response' => $data,
+                    ]),
+                ]);
+
                 return back()->with('status', "Key {$proxy->label} OK: {$message}");
             }
 
             $proxy->update([
-                'status' => 'idle',
+                'status' => 'expired',
                 'is_active' => false,
                 'meta' => array_merge($proxy->meta ?? [], [
                     'last_proxy_response' => $data,
@@ -209,7 +219,7 @@ class ProxyKeyController extends Controller
                 $statusCode = $data['status'] ?? 'N/A';
 
                 $proxy->update([
-                    'status' => 'idle',
+                    'status' => 'expired',
                     'is_active' => false,
                     'meta' => array_merge($proxy->meta ?? [], [
                         'last_proxy_response' => $data,
@@ -223,6 +233,8 @@ class ProxyKeyController extends Controller
             $ipSocks = $data['proxysocks5'] ?? null;
 
             $proxy->update([
+                'status' => 'running',
+                'is_active' => true,
                 'last_used_at' => now(),
                 'meta' => array_merge($proxy->meta ?? [], [
                     'last_proxy_response' => $data,

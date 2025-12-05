@@ -17,12 +17,37 @@ class AccountController extends Controller
     {
         $accounts = Account::orderByDesc('id')->paginate(25);
         $proxyKeys = ProxyKey::orderBy('label')->get();
+        $now = now();
+        $startOfWeek = $now->copy()->startOfWeek();
+        $startOfMonth = $now->copy()->startOfMonth();
 
         $stats = [
             'total' => Account::count(),
             'success' => Account::where('status', 'success')->count(),
             'failed' => Account::where('status', 'failed')->count(),
             'pending' => Account::where('status', 'pending')->count(),
+            'success_breakdown' => [
+                'today' => Account::where('status', 'success')
+                    ->whereDate('last_attempted_at', $now->toDateString())
+                    ->count(),
+                'week' => Account::where('status', 'success')
+                    ->whereBetween('last_attempted_at', [$startOfWeek, $now])
+                    ->count(),
+                'month' => Account::where('status', 'success')
+                    ->whereBetween('last_attempted_at', [$startOfMonth, $now])
+                    ->count(),
+            ],
+            'failed_breakdown' => [
+                'today' => Account::where('status', 'failed')
+                    ->whereDate('last_attempted_at', $now->toDateString())
+                    ->count(),
+                'week' => Account::where('status', 'failed')
+                    ->whereBetween('last_attempted_at', [$startOfWeek, $now])
+                    ->count(),
+                'month' => Account::where('status', 'failed')
+                    ->whereBetween('last_attempted_at', [$startOfMonth, $now])
+                    ->count(),
+            ],
             'latest_error' => Account::whereNotNull('last_error')
                 ->orderByDesc('last_attempted_at')
                 ->value('last_error'),
@@ -251,7 +276,8 @@ class AccountController extends Controller
     {
         $proxy->update([
             'stop_requested' => true,
-            'status' => 'idle',
+            'status' => 'expired',
+            'is_active' => false,
         ]);
 
         return redirect()->route('admin.dashboard')->with('status', "Đã yêu cầu dừng key {$proxy->label}");
@@ -358,12 +384,29 @@ class AccountController extends Controller
         ]);
     }
 
-    public function accountList()
+    public function accountList(Request $request)
     {
-        $accounts = Account::orderByDesc('id')->paginate(30);
+        $query = Account::orderByDesc('id');
+
+        $search = trim((string) $request->input('search', ''));
+        $status = strtolower((string) $request->input('status', ''));
+
+        if ($search !== '') {
+            $query->where('login', 'like', '%'.$search.'%');
+        }
+
+        if (in_array($status, ['pending', 'processing', 'success', 'failed'], true)) {
+            $query->where('status', $status);
+        }
+
+        $accounts = $query->paginate(30)->withQueryString();
 
         return view('admin.accounts', [
             'accounts' => $accounts,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+            ],
             'activeNav' => 'accounts',
             'title' => 'Danh sách tài khoản',
         ]);

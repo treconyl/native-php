@@ -7,7 +7,7 @@ const username = process.env.GARENA_USERNAME;
 const accountId = process.env.GARENA_ACCOUNT_ID || username;
 const password = process.env.GARENA_PASSWORD;
 const newPassword = process.env.GARENA_NEW_PASSWORD || "Password#2025";
-const headless = process.env.PLAYWRIGHT_HEADLESS !== "false";
+const headless = process.env.PLAYWRIGHT_HEADLESS === "true";
 const timezone = process.env.PLAYWRIGHT_TIMEZONE || "Asia/Ho_Chi_Minh";
 const locale = process.env.PLAYWRIGHT_LOCALE || "vi-VN";
 
@@ -172,17 +172,28 @@ async function run() {
 
     console.log("[Garena] B6: Điền form đổi mật khẩu");
     await typeExact(page, oldPasswordSelector, password);
-    await humanPause(400, 700);
+    await humanPause(500, 900);
     await typeExact(page, newPasswordSelector, newPassword);
-    await humanPause(350, 650);
+    await humanPause(450, 800);
     await typeExact(page, confirmPasswordSelector, newPassword);
+    await page.keyboard.press("Tab");
+    await humanPause(800, 1400);
 
     console.log("[Garena] B7: Nhấn THAY ĐỔI (submit)");
     const submitButton = page.getByRole("button", submitButtonRole);
     await submitButton.waitFor({ timeout: 15000 });
     await submitButton.scrollIntoViewIfNeeded();
+    const box = await submitButton.boundingBox();
+    if (box) {
+        const offsetX = randomInt(Math.floor(box.width * 0.2), Math.floor(box.width * 0.8));
+        const offsetY = randomInt(Math.floor(box.height * 0.3), Math.floor(box.height * 0.8));
+        await page.mouse.move(box.x + offsetX, box.y + offsetY, { steps: randomInt(3, 6) });
+        await humanPause(700, 1200);
+    } else {
+        await humanPause(600, 1000);
+    }
     await submitButton.click();
-    await humanPause(1500, 2500);
+    await humanPause(1800, 3200);
 
     const successMessage = "Bạn đã đổi mật khẩu thành công.";
     const verificationSelectors = [

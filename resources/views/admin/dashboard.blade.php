@@ -8,6 +8,8 @@
             'pending' => 0,
             'success' => 0,
             'failed' => 0,
+            'success_breakdown' => ['today' => 0, 'week' => 0, 'month' => 0],
+            'failed_breakdown' => ['today' => 0, 'week' => 0, 'month' => 0],
             'proxies_running' => 0,
             'proxies_total' => 0,
             'latest_error' => null,
@@ -35,8 +37,18 @@
         @php
             $statCards = [
                 ['title' => 'Tổng tài khoản', 'value' => $stats['total'], 'meta' => $stats['pending'].' đang chờ xử lý'],
-                ['title' => 'Thành công', 'value' => $stats['success'], 'meta' => number_format($stats['total'] ? ($stats['success']/max($stats['total'],1)*100) : 0, 1).'% hoàn tất'],
-                ['title' => 'Thất bại', 'value' => $stats['failed'], 'meta' => 'Theo dõi lỗi gần nhất'],
+                [
+                    'title' => 'Thành công',
+                    'value' => $stats['success'],
+                    'meta' => number_format($stats['total'] ? ($stats['success']/max($stats['total'],1)*100) : 0, 1).'% hoàn tất',
+                    'breakdown' => $stats['success_breakdown'] ?? [],
+                ],
+                [
+                    'title' => 'Thất bại',
+                    'value' => $stats['failed'],
+                    'meta' => 'Theo dõi lỗi gần nhất',
+                    'breakdown' => $stats['failed_breakdown'] ?? [],
+                ],
                 ['title' => 'Proxy chạy', 'value' => $stats['proxies_running'], 'meta' => 'Trong '.$stats['proxies_total'].' key'],
             ];
         @endphp
@@ -45,6 +57,13 @@
                 <h3 class="text-lg font-semibold text-slate-900">{{ $card['title'] }}</h3>
                 <p class="mt-3 text-3xl font-semibold text-slate-900">{{ $card['value'] }}</p>
                 <p class="mt-2 text-sm text-slate-500">{{ $card['meta'] }}</p>
+                @if(isset($card['breakdown']))
+                    <div class="mt-3 text-xs text-slate-500 space-y-1">
+                        <p>Hôm nay: <span class="font-semibold text-slate-800">{{ $card['breakdown']['today'] ?? 0 }}</span></p>
+                        <p>Tuần này: <span class="font-semibold text-slate-800">{{ $card['breakdown']['week'] ?? 0 }}</span></p>
+                        <p>Tháng này: <span class="font-semibold text-slate-800">{{ $card['breakdown']['month'] ?? 0 }}</span></p>
+                    </div>
+                @endif
                 <div class="mt-4 flex items-center justify-between text-sm font-semibold text-[#f2783f]">
                     <span>Chi tiết</span>
                     <span>→</span>
@@ -71,12 +90,12 @@
                     <form method="POST" action="{{ route('admin.proxy.store') }}" class="flex flex-col gap-3 mt-4 text-sm">
                         @csrf
                         <div>
-                            <label class="text-slate-500">Tên key</label>
-                            <input type="text" name="label" class="w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Key FPT" required>
+                            <label class="sunrise-label">Tên key</label>
+                            <input type="text" name="label" class="sunrise-input mt-1 text-sm" placeholder="Key FPT" required>
                         </div>
                         <div>
-                            <label class="text-slate-500">API key</label>
-                            <textarea name="api_key" rows="3" class="w-full rounded-xl border border-slate-200 px-3 py-2" required></textarea>
+                            <label class="sunrise-label">API key</label>
+                            <textarea name="api_key" rows="3" class="sunrise-input mt-1 text-sm" required></textarea>
                         </div>
                         <label class="inline-flex items-center gap-2 text-slate-600">
                             <input type="checkbox" name="is_active" value="1" checked class="rounded border-slate-300">

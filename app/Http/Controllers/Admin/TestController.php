@@ -26,7 +26,7 @@ class TestController extends Controller
         $accounts = Account::whereNotNull('current_password')
             ->orderBy('login')
             ->get();
-        $proxyKeys = ProxyKey::orderBy('label')->get();
+        $proxyKeys = ProxyKey::where('status', '!=', 'expired')->orderBy('label')->get();
         $credential = GarenaTestCredential::first();
 
         return view('admin.garena.index', [
@@ -87,7 +87,10 @@ class TestController extends Controller
 
     public function runGarenaMulti(Request $request)
     {
-        $proxies = ProxyKey::where('is_active', true)->orderBy('label')->get();
+        $proxies = ProxyKey::where('is_active', true)
+            ->where('status', 'running')
+            ->orderBy('label')
+            ->get();
 
         foreach ($proxies as $proxy) {
             ProcessPendingAccounts::dispatch($proxy->id);
@@ -175,9 +178,21 @@ class TestController extends Controller
                 'response' => $data,
             ]);
 
-            if (($data['status'] ?? null) !== 100) {
+            $statusCode = $data['status'] ?? null;
+
+            if ($statusCode !== 100) {
+                if (in_array((string) $statusCode, ['101', '102'], true)) {
+                    $proxy->update([
+                        'status' => 'expired',
+                        'is_active' => false,
+                        'meta' => array_merge($meta, [
+                            'last_proxy_response' => $data,
+                        ]),
+                    ]);
+                }
+
                 throw ValidationException::withMessages([
-                    'proxy_key_id' => 'Không xoay được IP (status '.$data['status'] ?? 'N/A'.'). '.$data['message'] ?? '',
+                    'proxy_key_id' => 'Không xoay được IP (status '.($statusCode ?? 'N/A').'). '.($data['message'] ?? ''),
                 ]);
             }
 

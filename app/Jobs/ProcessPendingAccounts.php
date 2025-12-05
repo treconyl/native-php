@@ -25,7 +25,7 @@ class ProcessPendingAccounts implements ShouldQueue
     {
         $proxy = ProxyKey::find($this->proxyKeyId);
 
-        if (! $proxy || ! $proxy->is_active) {
+        if (! $proxy || ! $proxy->is_active || $proxy->status === 'expired') {
             return;
         }
 
@@ -100,9 +100,22 @@ class ProcessPendingAccounts implements ShouldQueue
                 'response' => $data,
             ]);
 
-            if (($data['status'] ?? null) !== 100) {
-                $wait = 20;
-                $this->release($wait);
+            $statusCode = $data['status'] ?? null;
+
+            if ($statusCode !== 100) {
+                if (in_array((string) $statusCode, ['101', '102'], true)) {
+                    $proxy->update([
+                        'status' => 'expired',
+                        'is_active' => false,
+                        'meta' => array_merge($meta, [
+                            'last_proxy_response' => $data,
+                        ]),
+                    ]);
+
+                    return false;
+                }
+
+                $this->release(20);
 
                 return false;
             }

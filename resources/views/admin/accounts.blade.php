@@ -2,14 +2,9 @@
 
 @section('content')
 <header class="flex flex-col gap-2">
-    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-3xl font-semibold text-slate-900">Danh sách tài khoản</h2>
-            <p class="text-sm text-slate-500">Quản lý và theo dõi từng tài khoản đã import vào hệ thống.</p>
-        </div>
-        <div class="flex flex-col gap-3 w-full">
-
-        </div>
+    <div>
+        <h2 class="text-3xl font-semibold text-slate-900">Danh sách tài khoản</h2>
+        <p class="text-sm text-slate-500">Quản lý và theo dõi từng tài khoản đã import vào hệ thống.</p>
     </div>
     @if (session('status'))
         <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-emerald-700 text-sm">
@@ -58,8 +53,23 @@
     </div>
 </div>
 <div class="sunrise-card p-6 space-y-4">
-    <div class="flex items-center justify-between text-sm text-slate-600">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-slate-600">
         <span>Tổng {{ $accounts->total() }} tài khoản</span>
+        <form method="GET" action="{{ route('admin.accounts.list') }}" class="flex flex-wrap gap-2 items-center">
+            <div class="flex items-center gap-2">
+                <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Tìm tài khoản..."
+                    class="sunrise-input btn-sunrise-sm" style="min-width: 200px;">
+                <select name="status" class="sunrise-input btn-sunrise-sm">
+                    <option value="">Tất cả trạng thái</option>
+                    @foreach(['pending', 'processing', 'success', 'failed'] as $statusOption)
+                        <option value="{{ $statusOption }}" @selected(($filters['status'] ?? '') === $statusOption)>
+                            {{ $statusOption }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn-sunrise btn-sunrise-sm">Lọc</button>
+        </form>
     </div>
     <div class="rounded-2xl border border-slate-200 overflow-hidden">
         <table class="w-full text-sm">
@@ -105,7 +115,8 @@
                         <td class="px-3 py-3 text-slate-500">
                             <div class="flex items-center gap-2">
                                 <span>{{ \Illuminate\Support\Str::limit($account->last_error ?? '-', 40) }}</span>
-                                <button type="button" class="sunrise-chip sunrise-chip--ghost" uk-toggle="target: #account-edit-{{ $account->id }}">
+                                <button type="button" class="sunrise-chip sunrise-chip--ghost"
+                                    uk-toggle="target: #account-edit-{{ $account->id }}">
                                     Sửa
                                 </button>
                             </div>
@@ -177,12 +188,14 @@
             </div>
             <div>
                 <label class="sunrise-label">Mật khẩu hiện tại</label>
-                <input type="text" name="current_password" value="{{ $account->current_password }}" class="sunrise-input mt-1" required>
+                <input type="text" name="current_password" value="{{ $account->current_password }}"
+                    class="sunrise-input mt-1" required>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="sunrise-label">Mật khẩu mới</label>
-                    <input type="text" name="next_password" value="{{ $account->next_password }}" class="sunrise-input mt-1">
+                    <input type="text" name="next_password" value="{{ $account->next_password }}"
+                        class="sunrise-input mt-1">
                 </div>
                 <div>
                     <label class="sunrise-label">Trạng thái</label>

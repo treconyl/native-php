@@ -30,7 +30,7 @@
                     ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'key' => 'dashboard', 'hint' => 'Tổng quan'],
                     ['label' => 'Proxy Keys', 'route' => 'admin.proxies.index', 'key' => 'proxies', 'hint' => 'IP xoay'],
                     ['label' => 'Accounts', 'route' => 'admin.accounts.list', 'key' => 'accounts', 'hint' => 'Danh sách'],
-                    ['label' => 'Garena Test', 'route' => 'admin.garena.index', 'key' => 'garena', 'hint' => 'Playwright'],
+                    ['label' => 'Account Test', 'route' => 'admin.garena.index', 'key' => 'garena', 'hint' => 'Playwright'],
                 ])
                 @foreach ($navItems as $item)
                 @php($isActive = $activeNav === $item['key'])
