@@ -1,16 +1,18 @@
 @extends('layouts.admin')
 
 @section('content')
-    @php($proxyKeys = $proxyKeys ?? collect())
-    @php($stats = $stats ?? [
-        'total' => 0,
-        'pending' => 0,
-        'success' => 0,
-        'failed' => 0,
-        'proxies_running' => 0,
-        'proxies_total' => 0,
-        'latest_error' => null,
-    ])
+    @php
+        $proxyKeys = $proxyKeys ?? collect();
+        $stats = $stats ?? [
+            'total' => 0,
+            'pending' => 0,
+            'success' => 0,
+            'failed' => 0,
+            'proxies_running' => 0,
+            'proxies_total' => 0,
+            'latest_error' => null,
+        ];
+    @endphp
 
     <header class="flex flex-col gap-2">
         <p class="inline-flex items-center gap-2 text-sm text-[#1877f2] font-semibold">
@@ -29,27 +31,26 @@
         @endif
     </header>
 
-    <section class="grid gap-4 md:grid-cols-4">
-        <article class="sunrise-card p-5">
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Tổng tài khoản</p>
-            <div class="text-3xl font-semibold text-slate-900">{{ $stats['total'] }}</div>
-            <p class="text-xs text-slate-500 mt-1">{{ $stats['pending'] }} đang chờ xử lý</p>
-        </article>
-        <article class="sunrise-card p-5">
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Thành công</p>
-            <div class="text-3xl font-semibold text-emerald-600">{{ $stats['success'] }}</div>
-            <p class="text-xs text-slate-500 mt-1">{{ number_format($stats['total'] ? ($stats['success']/max($stats['total'],1)*100) : 0, 1) }}% hoàn tất</p>
-        </article>
-        <article class="sunrise-card p-5">
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Thất bại</p>
-            <div class="text-3xl font-semibold text-rose-600">{{ $stats['failed'] }}</div>
-            <p class="text-xs text-slate-500 mt-1">Theo dõi lỗi gần nhất</p>
-        </article>
-        <article class="sunrise-card p-5">
-            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">Proxy chạy</p>
-            <div class="text-3xl font-semibold text-slate-900">{{ $stats['proxies_running'] }}</div>
-            <p class="text-xs text-slate-500 mt-1">Trong {{ $stats['proxies_total'] }} key</p>
-        </article>
+    <section class="grid gap-5 md:grid-cols-4">
+        @php
+            $statCards = [
+                ['title' => 'Tổng tài khoản', 'value' => $stats['total'], 'meta' => $stats['pending'].' đang chờ xử lý'],
+                ['title' => 'Thành công', 'value' => $stats['success'], 'meta' => number_format($stats['total'] ? ($stats['success']/max($stats['total'],1)*100) : 0, 1).'% hoàn tất'],
+                ['title' => 'Thất bại', 'value' => $stats['failed'], 'meta' => 'Theo dõi lỗi gần nhất'],
+                ['title' => 'Proxy chạy', 'value' => $stats['proxies_running'], 'meta' => 'Trong '.$stats['proxies_total'].' key'],
+            ];
+        @endphp
+        @foreach($statCards as $card)
+            <article class="sunrise-card p-6 border-2 border-[#ffd0aa] shadow-[0_14px_0_#f7c69b] rounded-[26px]">
+                <h3 class="text-lg font-semibold text-slate-900">{{ $card['title'] }}</h3>
+                <p class="mt-3 text-3xl font-semibold text-slate-900">{{ $card['value'] }}</p>
+                <p class="mt-2 text-sm text-slate-500">{{ $card['meta'] }}</p>
+                <div class="mt-4 flex items-center justify-between text-sm font-semibold text-[#f2783f]">
+                    <span>Chi tiết</span>
+                    <span>→</span>
+                </div>
+            </article>
+        @endforeach
     </section>
 
     <div class="grid gap-6">
@@ -169,4 +170,3 @@
         </section>
     </div>
 @endsection
-

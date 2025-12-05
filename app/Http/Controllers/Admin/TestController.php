@@ -9,6 +9,8 @@ use App\Models\Account;
 use App\Models\GarenaTestCredential;
 use App\Models\ProxyKey;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -45,6 +47,10 @@ class TestController extends Controller
 
         $logPath = storage_path('logs/garena-test.log');
         file_put_contents($logPath, '');
+
+        if ($proxy && ! $this->rotateProxyOrFail($proxy)) {
+            return back()->withErrors('Không thể xoay proxy trước khi chạy. Vui lòng thử lại.');
+        }
 
         $jobPayload = [
             'account_id' => $payload['account_id'],
@@ -135,5 +141,72 @@ class TestController extends Controller
         ];
 
         return [$account, $proxy, $payload];
+    }
+
+    protected function rotateProxyOrFail(?ProxyKey $proxy): bool
+    {
+        if (! $proxy) {
+            return true;
+        }
+
+        $meta = $proxy->meta ?? [];
+        $lastRotatedAt = isset($meta['last_proxy_rotated_at']) ? Carbon::parse($meta['last_proxy_rotated_at']) : null;
+        $cooldownSeconds = 60;
+
+        if ($lastRotatedAt && $lastRotatedAt->gt(now()->subSeconds($cooldownSeconds))) {
+            throw ValidationException::withMessages([
+                'proxy_key_id' => "Proxy vừa xoay gần đây. Vui lòng đợi khoảng {$cooldownSeconds} giây giữa mỗi lần xoay.",
+            ]);
+        }
+
+        $params = [
+            'key' => $proxy->api_key,
+            'nhamang' => 'random',
+            'tinhthanh' => 0,
+        ];
+
+        try {
+            $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
+            $data = $response->json();
+
+            Log::info('[Garena Test] Rotate proxy before run', [
+                'proxy_key_id' => $proxy->id,
+                'status_code' => $response->status(),
+                'response' => $data,
+            ]);
+
+            if (($data['status'] ?? null) !== 100) {
+                throw ValidationException::withMessages([
+                    'proxy_key_id' => 'Không xoay được IP (status '.$data['status'] ?? 'N/A'.'). '.$data['message'] ?? '',
+                ]);
+            }
+
+            $proxy->update([
+                'last_used_at' => now(),
+                'status' => 'running',
+                'meta' => array_merge($meta, [
+                    'last_proxy_response' => $data,
+                    'last_proxy_http' => $data['proxyhttp'] ?? null,
+                    'last_proxy_socks' => $data['proxysocks5'] ?? null,
+                    'last_proxy_username' => $data['username'] ?? null,
+                    'last_proxy_password' => $data['password'] ?? null,
+                    'last_proxy_rotated_at' => now()->toDateTimeString(),
+                ]),
+            ]);
+
+            return true;
+        } catch (ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('[Garena Test] Rotate proxy failed before run', [
+                'proxy_key_id' => $proxy->id,
+                'params' => $params,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'proxy_key_id' => 'Không thể xoay proxy trước khi chạy: '.$e->getMessage(),
+            ]);
+        }
     }
 }

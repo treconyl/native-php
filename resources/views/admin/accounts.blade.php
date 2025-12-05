@@ -27,7 +27,7 @@
         <form method="POST" action="{{ route('admin.garena.run_multi') }}">
             @csrf
             <button type="submit" class="btn-sunrise btn-sunrise-sm">
-                Chạy tất cả proxy (account pending)
+                Chạy tất cả proxy (mật khẩu ngẫu nhiên)
             </button>
         </form>
         <form method="POST" action="{{ route('admin.proxy.stop_all') }}">
@@ -105,8 +105,7 @@
                         <td class="px-3 py-3 text-slate-500">
                             <div class="flex items-center gap-2">
                                 <span>{{ \Illuminate\Support\Str::limit($account->last_error ?? '-', 40) }}</span>
-                                <button type="button" class="sunrise-chip sunrise-chip--ghost"
-                                    uk-toggle="target: #account-edit-{{ $account->id }}">
+                                <button type="button" class="sunrise-chip sunrise-chip--ghost" uk-toggle="target: #account-edit-{{ $account->id }}">
                                     Sửa
                                 </button>
                             </div>
