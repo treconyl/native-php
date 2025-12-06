@@ -124,8 +124,6 @@ class ProcessPendingAccounts implements ShouldQueue
             }
 
             $proxy->update([
-                'last_used_at' => now(),
-                'status' => 'running',
                 'meta' => array_merge($meta, [
                     'last_proxy_response' => $data,
                     'last_proxy_http' => $data['proxyhttp'] ?? null,

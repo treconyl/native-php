@@ -171,7 +171,7 @@ class ProxyKeyController extends Controller
                 return back()->with('status', "Key {$proxy->label} OK: {$message}");
             }
 
-            if ($status === 102 || str_contains(strtolower($message), 'het han') || str_contains(strtolower($message), 'khong ton tai')) {
+            if (str_contains(mb_strtolower($message), 'het han') || str_contains(mb_strtolower($message), 'khong ton tai')) {
                 $proxy->update([
                     'status' => 'expired',
                     'is_active' => false,
