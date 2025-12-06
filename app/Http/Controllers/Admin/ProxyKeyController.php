@@ -148,6 +148,8 @@ class ProxyKeyController extends Controller
             $response = Http::timeout(20)->get('https://proxyxoay.shop/api/get.php', $params);
             $data = $response->json();
             $expireAt = $this->extractExpireAt($data);
+            $status = $data['status'] ?? null;
+            $message = $data['message'] ?? 'Không có thông điệp trả về.';
 
             Log::info('Proxy API test', [
                 'proxy_key_id' => $proxy->id,
@@ -155,9 +157,6 @@ class ProxyKeyController extends Controller
                 'status_code' => $response->status(),
                 'response' => $data,
             ]);
-
-            $status = $data['status'] ?? null;
-            $message = $data['message'] ?? 'Không có thông điệp trả về.';
 
             if ($status === 100) {
                 $proxy->update([
@@ -170,6 +169,17 @@ class ProxyKeyController extends Controller
                 ]);
 
                 return back()->with('status', "Key {$proxy->label} OK: {$message}");
+            }
+
+            if ($status === 102 || str_contains(strtolower($message), 'het han') || str_contains(strtolower($message), 'khong ton tai')) {
+                $proxy->update([
+                    'status' => 'expired',
+                    'is_active' => false,
+                    'meta' => array_merge($proxy->meta ?? [], [
+                        'last_proxy_response' => $data,
+                        'last_proxy_expire_at' => $expireAt?->toDateTimeString(),
+                    ]),
+                ]);
             }
 
             return back()->withErrors("Key {$proxy->label} trả về lỗi ({$status}): {$message}");
