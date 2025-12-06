@@ -142,7 +142,32 @@ return [
      * The queue workers that get auto-started on your application start.
      */
     'queue_workers' => [
-        'default' => [
+        // Spawn 5 workers for queue "default"
+        'default_1' => [
+            'queues' => ['default'],
+            'memory_limit' => 128,
+            'timeout' => 60,
+            'sleep' => 3,
+        ],
+        'default_2' => [
+            'queues' => ['default'],
+            'memory_limit' => 128,
+            'timeout' => 60,
+            'sleep' => 3,
+        ],
+        'default_3' => [
+            'queues' => ['default'],
+            'memory_limit' => 128,
+            'timeout' => 60,
+            'sleep' => 3,
+        ],
+        'default_4' => [
+            'queues' => ['default'],
+            'memory_limit' => 128,
+            'timeout' => 60,
+            'sleep' => 3,
+        ],
+        'default_5' => [
             'queues' => ['default'],
             'memory_limit' => 128,
             'timeout' => 60,
