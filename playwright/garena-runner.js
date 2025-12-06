@@ -222,6 +222,24 @@ async function humanHover(page, locator) {
     await humanPause(200, 520);
 }
 
+async function ensureAccountSafe(page) {
+    const dangerSelectors = [
+        "text=nguy hiểm",
+        "text=tài khoản nguy hiểm",
+        "text=Tài khoản của bạn",
+        "text=Hành động ngay để tăng cường mức độ bảo mật",
+    ];
+
+    for (const selector of dangerSelectors) {
+        const warning = page.locator(selector).first();
+        if (await warning.isVisible({ timeout: 500 })) {
+            throw new Error(
+                "[Garena] Dừng: Garena báo tài khoản nguy hiểm, không tiếp tục đổi mật khẩu."
+            );
+        }
+    }
+}
+
 /**
  * ====== HELPER FLOW CHO ACCOUNT CENTER ======
  */
@@ -509,6 +527,7 @@ async function run() {
     console.log("[Garena] B4: Chờ Account Center tải xong");
     await page.waitForSelector("text=Trang chủ", { timeout: 30000 });
     await humanPause(600, 1200);
+    await ensureAccountSafe(page);
     await humanScroll(page, 400);
     console.log("[Garena] B4.5: Đi dạo như người dùng thật");
     await wanderAccountCenter(page);
@@ -592,6 +611,12 @@ async function run() {
 
 run().catch((error) => {
     console.error("[Garena Playwright] Lỗi:", error);
+    if (
+        typeof error?.message === "string" &&
+        error.message.includes("nguy hiểm")
+    ) {
+        console.error("[Garena] Đăng nhập báo tài khoản nguy hiểm, dừng ngay.");
+    }
     process.exit(1);
 });
 

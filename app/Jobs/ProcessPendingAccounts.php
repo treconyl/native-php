@@ -2,8 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Account;
-use App\Models\ProxyKey;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,6 +11,9 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+
+use App\Models\Account;
+use App\Models\ProxyKey;
 
 class ProcessPendingAccounts implements ShouldQueue
 {
@@ -164,7 +165,7 @@ class ProcessPendingAccounts implements ShouldQueue
             $special[random_int(0, strlen($special) - 1)],
         ];
 
-        $pool = $upper.$lower.$digits.$special;
+        $pool = $upper . $lower . $digits . $special;
 
         while (count($chars) < $length) {
             $chars[] = $pool[random_int(0, strlen($pool) - 1)];

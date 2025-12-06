@@ -2,7 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Models\Account;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,6 +10,10 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Process;
+
+use App\Jobs\ProcessPendingAccounts;
+
+use App\Models\Account;
 
 class RunGarenaTest implements ShouldQueue
 {
@@ -56,21 +59,23 @@ class RunGarenaTest implements ShouldQueue
         $process->run(function ($type, $buffer) {
             $lines = array_filter(explode("\n", $buffer));
             foreach ($lines as $line) {
-                Log::channel('garena_test')->info('[Garena Test Output] '.$line);
+                Log::channel('garena_test')->info('[Garena Test Output] ' . $line);
             }
         });
 
         if (! $process->isSuccessful()) {
             $errorOutput = $process->getErrorOutput() ?: $process->getOutput();
+            $friendlyError = $this->summarizeError($errorOutput);
 
             Log::channel('garena_test')->error('[Garena Test Job] Thất bại', [
                 'error' => $errorOutput,
+                'summary' => $friendlyError,
             ]);
 
             $this->updateAccount([
                 'status' => 'failed',
                 'last_attempted_at' => now(),
-                'last_error' => Str::limit(trim('[Playwright] '.$errorOutput), 1000),
+                'last_error' => $friendlyError,
                 'next_password' => null,
             ]);
 
@@ -115,5 +120,34 @@ class RunGarenaTest implements ShouldQueue
         if ($proxyId) {
             ProcessPendingAccounts::dispatch($proxyId)->onQueue($this->queue);
         }
+    }
+
+    protected function summarizeError(string $errorOutput): string
+    {
+        $lower = mb_strtolower($errorOutput);
+
+        if (str_contains($lower, 'captcha') || str_contains($lower, 'xác minh')) {
+            return 'Garena yêu cầu captcha/xác minh, dừng lại.';
+        }
+
+        if (str_contains($lower, 'nguy hiểm') || str_contains($lower, 'tai khoan nguy hiem')) {
+            return 'Garena báo tài khoản nguy hiểm, dừng lại.';
+        }
+
+        if (str_contains($lower, 'browser has been closed') || str_contains($lower, 'target page') || str_contains($lower, 'context or browser')) {
+            return 'Trình duyệt bị đóng đột ngột khi chạy.';
+        }
+
+        if (str_contains($lower, 'timeout')) {
+            return 'Hết thời gian chờ khi thao tác Garena.';
+        }
+
+        if (str_contains($lower, 'net::') || str_contains($lower, 'network')) {
+            return 'Lỗi mạng khi truy cập Garena.';
+        }
+
+        $firstLine = trim(strtok($errorOutput, "\n")) ?: 'Lỗi Playwright không xác định.';
+
+        return Str::limit('[Playwright] ' . $firstLine, 220);
     }
 }
