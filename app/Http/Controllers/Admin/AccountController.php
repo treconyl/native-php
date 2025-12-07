@@ -151,7 +151,7 @@ class AccountController extends Controller
 
     public function export()
     {
-        $filename = 'accounts_'.now()->format('Ymd_His').'.csv';
+        $filename = 'accounts_' . now()->format('Ymd_His') . '.csv';
 
         return response()->streamDownload(function () {
             $handle = fopen('php://output', 'w');
@@ -268,7 +268,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể gọi API proxy để khởi động key: '.$e->getMessage());
+            return back()->withErrors('Không thể gọi API proxy để khởi động key: ' . $e->getMessage());
         }
     }
 
@@ -317,7 +317,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể gọi API proxy: '.$e->getMessage());
+            return back()->withErrors('Không thể gọi API proxy: ' . $e->getMessage());
         }
     }
 
@@ -369,7 +369,7 @@ class AccountController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->withErrors('Không thể xoay IP: '.$e->getMessage());
+            return back()->withErrors('Không thể xoay IP: ' . $e->getMessage());
         }
     }
 
@@ -390,18 +390,21 @@ class AccountController extends Controller
 
         $search = trim((string) $request->input('search', ''));
         $status = strtolower((string) $request->input('status', ''));
-        $sort = $request->input('sort', 'newest');
+        $sort = $request->input('sort', 'recent_attempt');
 
         if ($search !== '') {
-            $query->where('login', 'like', '%'.$search.'%');
+            $query->where('login', 'like', '%' . $search . '%');
         }
 
         if (in_array($status, ['pending', 'processing', 'success', 'failed'], true)) {
             $query->where('status', $status);
         }
 
-        $sortDirection = $sort === 'oldest' ? 'asc' : 'desc';
-        $query->orderBy('id', $sortDirection);
+        if ($sort === 'oldest_attempt') {
+            $query->orderBy('last_attempted_at')->orderBy('id');
+        } else {
+            $query->orderByDesc('last_attempted_at')->orderByDesc('id');
+        }
 
         $accounts = $query->paginate(30)->withQueryString();
 

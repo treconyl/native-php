@@ -68,8 +68,12 @@
                     @endforeach
                 </select>
                 <select name="sort" class="sunrise-input btn-sunrise-sm">
-                    <option value="newest" @selected(($filters['sort'] ?? 'newest') === 'newest')>Mới nhất</option>
-                    <option value="oldest" @selected(($filters['sort'] ?? '') === 'oldest')>Cũ nhất</option>
+                    <option value="recent_attempt" @selected(($filters['sort'] ?? 'recent_attempt') === 'recent_attempt')>
+                        Lần thử gần nhất
+                    </option>
+                    <option value="oldest_attempt" @selected(($filters['sort'] ?? '') === 'oldest_attempt')>
+                        Lần thử lâu nhất
+                    </option>
                 </select>
             </div>
             <button type="submit" class="btn-sunrise btn-sunrise-sm">Lọc</button>

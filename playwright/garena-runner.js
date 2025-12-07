@@ -227,12 +227,7 @@ async function ensureAccountSafe(page) {
 }
 
 async function failIfDanger(page) {
-    const dangerSelectors = [
-        "text=Tài khoản của bạn đang gặp nguy hiểm",
-        "text=nguy hiểm",
-        "text=tài khoản nguy hiểm",
-        "text=Hành động ngay để tăng cường mức độ bảo mật",
-    ];
+    const dangerSelectors = ["text=Tài khoản của bạn đang gặp nguy hiểm"];
 
     for (const selector of dangerSelectors) {
         const warning = page.locator(selector).first();
@@ -241,6 +236,11 @@ async function failIfDanger(page) {
                 "[Garena] Garena báo tài khoản nguy hiểm, dừng lại."
             );
         }
+    }
+
+    const regexWarning = page.locator("text=/nguy\\s*h(i|í)ểm/i").first();
+    if (await regexWarning.isVisible({ timeout: 300 })) {
+        throw new Error("[Garena] Garena báo tài khoản nguy hiểm, dừng lại.");
     }
 }
 
@@ -449,169 +449,186 @@ async function run() {
         process.env.PLAYWRIGHT_PROXY_KEY_ID || accountId || username;
     const profile = generateRealisticBrowserProfile(seedString);
 
-    const browser = await chromium.launch({ headless });
-    const context = await browser.newContext({
-        ...profile.contextOptions,
-    });
-
-    const page = await context.newPage();
-    await page.addInitScript(
-        (navOverrides, screenInfo) => {
-            Object.defineProperty(navigator, "webdriver", {
-                get: () => undefined,
-            });
-
-            if (!window.chrome) {
-                window.chrome = { runtime: {} };
-            }
-
-            Object.defineProperty(navigator, "platform", {
-                get: () => navOverrides.platform,
-            });
-            Object.defineProperty(navigator, "language", {
-                get: () => navOverrides.language,
-            });
-            Object.defineProperty(navigator, "languages", {
-                get: () => navOverrides.languages,
-            });
-            Object.defineProperty(navigator, "hardwareConcurrency", {
-                get: () => navOverrides.hardwareConcurrency,
-            });
-            Object.defineProperty(navigator, "maxTouchPoints", {
-                get: () => navOverrides.maxTouchPoints,
-            });
-            try {
-                Object.defineProperty(navigator, "deviceMemory", {
-                    get: () => navOverrides.deviceMemory,
-                });
-            } catch {
-                // ignore
-            }
-
-            Object.assign(window.screen, {
-                width: screenInfo.width,
-                height: screenInfo.height,
-                availWidth: screenInfo.availWidth,
-                availHeight: screenInfo.availHeight,
-                colorDepth: screenInfo.colorDepth,
-                pixelDepth: screenInfo.pixelDepth,
-            });
-        },
-        profile.navigatorOverrides,
-        profile.screen
-    );
-
-    console.log("[Profile] Using browser profile:", profile.meta);
-
-    console.log("[Garena] B1: Mở https://account.garena.com");
-    await page.goto("https://account.garena.com", {
-        waitUntil: "load",
-        timeout: 60000,
-    });
-    await humanPause(1000, 2000);
-
-    await page.waitForURL(/https:\/\/sso\.garena\.com\/universal\/login.*/i, {
-        timeout: 20000,
-    });
-    await page.evaluate(() => window.scrollTo(0, 120));
-    await humanMouseMove(page);
-    await humanPause();
-
-    console.log("[Garena] B2: Điền form đăng nhập");
-    await humanType(page, loginInputSelector, username);
-    await humanPause(400, 800);
-    await humanType(page, passwordInputSelector, password);
-    await humanPause(800, 1500);
-
-    console.log("[Garena] B3: Nhấn Đăng Nhập");
-    await page.locator('button:has-text("Đăng Nhập Ngay")').click();
-    await humanPause(1000, 2000);
-    await failIfDanger(page);
-    await retryLoginIfNeeded(page, username, password);
-
-    console.log("[Garena] B4: Chờ Account Center tải xong");
-    await page.waitForSelector("text=Trang chủ", { timeout: 30000 });
-    await humanPause(600, 1200);
-    await ensureAccountSafe(page);
-    await humanScroll(page, 400);
-    console.log("[Garena] B4.5: Đi dạo như người dùng thật");
-    await wanderAccountCenter(page);
-
-    console.log("[Garena] B5: Mở form đổi mật khẩu từ trang chủ");
-    const changePasswordButton = page.locator("text=Thay đổi Mật khẩu").first();
-    await changePasswordButton.click();
-    await humanPause(1000, 1800);
-    await page.waitForSelector(oldPasswordSelector, { timeout: 20000 });
-
-    console.log("[Garena] B6: Điền form đổi mật khẩu");
-    await typeExact(page, oldPasswordSelector, password);
-    await humanPause(700, 1200);
-    await typeExact(page, newPasswordSelector, newPassword);
-    await humanPause(650, 1100);
-    await typeExact(page, confirmPasswordSelector, newPassword);
-    await humanPause(1200, 2000);
-
-    console.log("[Garena] B7: Nhấn THAY ĐỔI (submit)");
-    const submitButton = page.getByRole("button", submitButtonRole);
-    await submitButton.waitFor({ timeout: 15000 });
-    await submitButton.scrollIntoViewIfNeeded();
-    await humanMouseMove(page);
-    const box = await submitButton.boundingBox();
-    if (box) {
-        const offsetX = randomInt(
-            Math.floor(box.width * 0.2),
-            Math.floor(box.width * 0.8)
-        );
-        const offsetY = randomInt(
-            Math.floor(box.height * 0.3),
-            Math.floor(box.height * 0.8)
-        );
-        await page.mouse.move(box.x + offsetX, box.y + offsetY, {
-            steps: randomInt(4, 8),
-        });
-        await humanPause(1000, 1800);
-    } else {
-        await humanPause(800, 1400);
-    }
-    await submitButton.click();
-    await humanPause(2200, 3600);
-
-    const successMessage = "Bạn đã đổi mật khẩu thành công.";
-    const verificationSelectors = [
-        "text=Xác minh thiết bị",
-        "text=Device Verification",
-        "text=Thiết bị",
-    ];
+    let browser = null;
+    let context = null;
+    let page = null;
 
     try {
-        await page.waitForSelector(`text=${successMessage}`, {
-            timeout: 10000,
+        browser = await chromium.launch({ headless });
+        context = await browser.newContext({
+            ...profile.contextOptions,
         });
-        console.log(`[Garena] ${successMessage}`);
-    } catch (_) {
-        for (const selector of verificationSelectors) {
-            try {
-                if (await page.locator(selector).first().isVisible()) {
-                    throw new Error(
-                        "[Garena] Garena yêu cầu xác minh thiết bị sau khi đổi mật khẩu. Vui lòng hoàn tất bước xác minh thủ công."
-                    );
+
+        page = await context.newPage();
+        await page.addInitScript(
+            (navOverrides, screenInfo) => {
+                Object.defineProperty(navigator, "webdriver", {
+                    get: () => undefined,
+                });
+
+                if (!window.chrome) {
+                    window.chrome = { runtime: {} };
                 }
-            } catch {
-                // selector not found, ignore
+
+                Object.defineProperty(navigator, "platform", {
+                    get: () => navOverrides.platform,
+                });
+                Object.defineProperty(navigator, "language", {
+                    get: () => navOverrides.language,
+                });
+                Object.defineProperty(navigator, "languages", {
+                    get: () => navOverrides.languages,
+                });
+                Object.defineProperty(navigator, "hardwareConcurrency", {
+                    get: () => navOverrides.hardwareConcurrency,
+                });
+                Object.defineProperty(navigator, "maxTouchPoints", {
+                    get: () => navOverrides.maxTouchPoints,
+                });
+                try {
+                    Object.defineProperty(navigator, "deviceMemory", {
+                        get: () => navOverrides.deviceMemory,
+                    });
+                } catch {
+                    // ignore
+                }
+
+                Object.assign(window.screen, {
+                    width: screenInfo.width,
+                    height: screenInfo.height,
+                    availWidth: screenInfo.availWidth,
+                    availHeight: screenInfo.availHeight,
+                    colorDepth: screenInfo.colorDepth,
+                    pixelDepth: screenInfo.pixelDepth,
+                });
+            },
+            profile.navigatorOverrides,
+            profile.screen
+        );
+
+        console.log("[Profile] Using browser profile:", profile.meta);
+
+        console.log("[Garena] B1: Mở https://account.garena.com");
+        await page.goto("https://account.garena.com", {
+            waitUntil: "load",
+            timeout: 60000,
+        });
+        await humanPause(1000, 2000);
+
+        await page.waitForURL(
+            /https:\/\/sso\.garena\.com\/universal\/login.*/i,
+            {
+                timeout: 20000,
             }
+        );
+        await page.evaluate(() => window.scrollTo(0, 120));
+        await humanMouseMove(page);
+        await humanPause();
+
+        console.log("[Garena] B2: Điền form đăng nhập");
+        await humanType(page, loginInputSelector, username);
+        await humanPause(400, 800);
+        await humanType(page, passwordInputSelector, password);
+        await humanPause(800, 1500);
+
+        console.log("[Garena] B3: Nhấn Đăng Nhập");
+        await page.locator('button:has-text("Đăng Nhập Ngay")').click();
+        await humanPause(1000, 2000);
+        await failIfDanger(page);
+        await page.waitForTimeout(1500);
+        await failIfDanger(page);
+        await retryLoginIfNeeded(page, username, password);
+
+        console.log("[Garena] B4: Chờ Account Center tải xong");
+        await page.waitForSelector("text=Trang chủ", { timeout: 30000 });
+        await humanPause(600, 1200);
+        await ensureAccountSafe(page);
+        await humanScroll(page, 400);
+        console.log("[Garena] B4.5: Đi dạo như người dùng thật");
+        await wanderAccountCenter(page);
+
+        console.log("[Garena] B5: Mở form đổi mật khẩu từ trang chủ");
+        const changePasswordButton = page
+            .locator("text=Thay đổi Mật khẩu")
+            .first();
+        await changePasswordButton.click();
+        await humanPause(1000, 1800);
+        await page.waitForSelector(oldPasswordSelector, { timeout: 20000 });
+
+        console.log("[Garena] B6: Điền form đổi mật khẩu");
+        await typeExact(page, oldPasswordSelector, password);
+        await humanPause(700, 1200);
+        await typeExact(page, newPasswordSelector, newPassword);
+        await humanPause(650, 1100);
+        await typeExact(page, confirmPasswordSelector, newPassword);
+        await humanPause(1200, 2000);
+
+        console.log("[Garena] B7: Nhấn THAY ĐỔI (submit)");
+        const submitButton = page.getByRole("button", submitButtonRole);
+        await submitButton.waitFor({ timeout: 15000 });
+        await submitButton.scrollIntoViewIfNeeded();
+        await humanMouseMove(page);
+        const box = await submitButton.boundingBox();
+        if (box) {
+            const offsetX = randomInt(
+                Math.floor(box.width * 0.2),
+                Math.floor(box.width * 0.8)
+            );
+            const offsetY = randomInt(
+                Math.floor(box.height * 0.3),
+                Math.floor(box.height * 0.8)
+            );
+            await page.mouse.move(box.x + offsetX, box.y + offsetY, {
+                steps: randomInt(4, 8),
+            });
+            await humanPause(1000, 1800);
+        } else {
+            await humanPause(800, 1400);
+        }
+        await submitButton.click();
+        await humanPause(2200, 3600);
+
+        const successMessage = "Bạn đã đổi mật khẩu thành công.";
+        const verificationSelectors = [
+            "text=Xác minh thiết bị",
+            "text=Device Verification",
+            "text=Thiết bị",
+        ];
+
+        try {
+            await page.waitForSelector(`text=${successMessage}`, {
+                timeout: 10000,
+            });
+            console.log(`[Garena] ${successMessage}`);
+        } catch (_) {
+            for (const selector of verificationSelectors) {
+                try {
+                    if (await page.locator(selector).first().isVisible()) {
+                        throw new Error(
+                            "[Garena] Garena yêu cầu xác minh thiết bị sau khi đổi mật khẩu. Vui lòng hoàn tất bước xác minh thủ công."
+                        );
+                    }
+                } catch {
+                    // selector not found, ignore
+                }
+            }
+
+            throw new Error(
+                "[Garena] Không thấy thông báo đổi mật khẩu thành công. Vui lòng kiểm tra lại trang Garena."
+            );
         }
 
-        throw new Error(
-            "[Garena] Không thấy thông báo đổi mật khẩu thành công. Vui lòng kiểm tra lại trang Garena."
-        );
+        console.log("[Garena] Kết thúc, đợi thêm trước khi đóng.");
+        await page.waitForTimeout(5000);
+    } finally {
+        if (context) {
+            await context.close().catch(() => {});
+        }
+        if (browser) {
+            await browser.close().catch(() => {});
+        }
+        fs.rmSync(tempProfileDir, { recursive: true, force: true });
     }
-
-    console.log("[Garena] Kết thúc, đợi thêm trước khi đóng.");
-    await page.waitForTimeout(5000);
-
-    await context.close();
-    await browser.close();
-    fs.rmSync(tempProfileDir, { recursive: true, force: true });
 }
 
 run().catch((error) => {
