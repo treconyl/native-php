@@ -34,7 +34,8 @@
                 ])
                 @foreach ($navItems as $item)
                 @php($isActive = $activeNav === $item['key'])
-                <a href="{{ route($item['route']) }}" data-active="{{ $isActive ? 'true' : 'false' }}"
+                @php($href = isset($item['route']) ? route($item['route']) : ($item['url'] ?? '#'))
+                <a href="{{ $href }}" data-active="{{ $isActive ? 'true' : 'false' }}"
                     class="sunrise-nav hover:no-underline!">
                     <span class="sunrise-nav__dot"></span>
                     <div class="flex flex-col leading-tight">

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Native\Desktop\Contracts\ProvidesPhpIni;
+use Native\Desktop\Facades\Menu;
 use Native\Desktop\Facades\Window;
 
 class NativeAppServiceProvider implements ProvidesPhpIni
@@ -13,6 +14,24 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function boot(): void
     {
+        $navigation = Menu::make(
+            Menu::route('admin.dashboard', 'Dashboard'),
+            Menu::route('admin.proxies.index', 'Proxy Keys'),
+            Menu::route('admin.accounts.list', 'Accounts'),
+            Menu::route('admin.garena.index', 'Account Test'),
+            Menu::separator(),
+            Menu::link(url('/horizon'), 'Horizon'),
+        )->label('Điều hướng');
+
+        Menu::create(
+            Menu::app(),
+            Menu::file(),
+            Menu::edit(),
+            Menu::view(),
+            Menu::window(),
+            $navigation,
+        );
+
         Window::open()
             ->title('Garena Tool')
             ->width(1600)
@@ -24,7 +43,6 @@ class NativeAppServiceProvider implements ProvidesPhpIni
      */
     public function phpIni(): array
     {
-        return [
-        ];
+        return [];
     }
 }
