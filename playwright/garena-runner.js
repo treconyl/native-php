@@ -223,18 +223,22 @@ async function humanHover(page, locator) {
 }
 
 async function ensureAccountSafe(page) {
+    await failIfDanger(page);
+}
+
+async function failIfDanger(page) {
     const dangerSelectors = [
+        "text=Tài khoản của bạn đang gặp nguy hiểm",
         "text=nguy hiểm",
         "text=tài khoản nguy hiểm",
-        "text=Tài khoản của bạn",
         "text=Hành động ngay để tăng cường mức độ bảo mật",
     ];
 
     for (const selector of dangerSelectors) {
         const warning = page.locator(selector).first();
-        if (await warning.isVisible({ timeout: 500 })) {
+        if (await warning.isVisible({ timeout: 300 })) {
             throw new Error(
-                "[Garena] Dừng: Garena báo tài khoản nguy hiểm, không tiếp tục đổi mật khẩu."
+                "[Garena] Garena báo tài khoản nguy hiểm, dừng lại."
             );
         }
     }
@@ -522,6 +526,7 @@ async function run() {
     console.log("[Garena] B3: Nhấn Đăng Nhập");
     await page.locator('button:has-text("Đăng Nhập Ngay")').click();
     await humanPause(1000, 2000);
+    await failIfDanger(page);
     await retryLoginIfNeeded(page, username, password);
 
     console.log("[Garena] B4: Chờ Account Center tải xong");
@@ -629,6 +634,7 @@ async function retryLoginIfNeeded(page, username, password) {
         console.log("[Garena] Login không thành công, gõ lại chính xác.");
     }
 
+    await failIfDanger(page);
     await typeExact(page, loginInputSelector, username);
     await humanPause(200, 400);
     await typeExact(page, passwordInputSelector, password);
