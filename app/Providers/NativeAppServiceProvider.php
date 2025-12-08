@@ -20,7 +20,6 @@ class NativeAppServiceProvider implements ProvidesPhpIni
             Menu::route('admin.accounts.list', 'Accounts'),
             Menu::route('admin.garena.index', 'Account Test'),
             Menu::separator(),
-            Menu::link(url('/horizon'), 'Horizon'),
         )->label('Điều hướng');
 
         Menu::create(
