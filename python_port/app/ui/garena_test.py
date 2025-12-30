@@ -16,7 +16,7 @@ class GarenaTestView(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
 
         header = QtWidgets.QLabel("Account Test Runner")
-        header.setStyleSheet("font-size: 18px; font-weight: 600;")
+        header.setObjectName("sectionTitle")
         layout.addWidget(header)
 
         toolbar = QtWidgets.QHBoxLayout()

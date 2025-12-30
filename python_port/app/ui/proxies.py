@@ -12,7 +12,7 @@ class ProxiesView(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
 
         header = QtWidgets.QLabel("Proxy Keys")
-        header.setStyleSheet("font-size: 18px; font-weight: 600;")
+        header.setObjectName("sectionTitle")
         layout.addWidget(header)
 
         toolbar = QtWidgets.QHBoxLayout()

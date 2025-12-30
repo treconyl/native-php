@@ -20,7 +20,7 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
     connection = sqlite3.connect(path, check_same_thread=False)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA journal_mode=WAL;")
-    connection.execute("PRAGMA busy_timeout = ?;", (settings.DB_BUSY_TIMEOUT_MS,))
+    connection.execute(f"PRAGMA busy_timeout = {settings.DB_BUSY_TIMEOUT_MS};")
     return connection
 
 

@@ -13,7 +13,7 @@ class AccountsView(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout(self)
 
         header = QtWidgets.QLabel("Accounts")
-        header.setStyleSheet("font-size: 18px; font-weight: 600;")
+        header.setObjectName("sectionTitle")
         layout.addWidget(header)
 
         filter_row = QtWidgets.QHBoxLayout()

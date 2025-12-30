@@ -9,6 +9,7 @@ from app.ui.accounts import AccountsView
 from app.ui.dashboard import DashboardView
 from app.ui.garena_test import GarenaTestView
 from app.ui.proxies import ProxiesView
+from app.ui.style import app_stylesheet
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -31,6 +32,7 @@ def main() -> int:
     db.migrate()
 
     app = QtWidgets.QApplication(sys.argv)
+    app.setStyleSheet(app_stylesheet())
     window = MainWindow()
     window.show()
 
