@@ -4,7 +4,7 @@ from PySide6 import QtCore, QtWidgets
 
 from app.services import accounts_service, proxies_service
 from app.services.queue_service import QueueService
-from app.workers.process_pending_worker import process_pending_for_proxy
+from app.workers.process_pending_worker import run_proxy_loop
 
 
 class AccountsView(QtWidgets.QWidget):
@@ -125,7 +125,7 @@ class AccountsView(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "Run", "No active proxies")
             return
         for proxy in active:
-            self._queue.submit(process_pending_for_proxy, proxy)
+            self._queue.submit(run_proxy_loop, int(proxy["id"]))
 
     def _row_payload(self, row_idx: int) -> dict[str, str]:
         return {

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from PySide6 import QtWidgets
+from PySide6 import QtGui, QtWidgets
 
 from app.services import db
 from app.ui.accounts import AccountsView
@@ -10,12 +10,16 @@ from app.ui.dashboard import DashboardView
 from app.ui.garena_test import GarenaTestView
 from app.ui.proxies import ProxiesView
 from app.ui.style import app_stylesheet
+from app.config import settings
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("Garena Tool")
+        self.setWindowTitle("Garena Change Password")
+        icon_path = settings.ASSETS_DIR / "logo.png"
+        if icon_path.exists():
+            self.setWindowIcon(QtGui.QIcon(str(icon_path)))
         self.resize(1280, 720)
 
         tabs = QtWidgets.QTabWidget()
@@ -32,6 +36,7 @@ def main() -> int:
     db.migrate()
 
     app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("Garena Change Password")
     app.setStyleSheet(app_stylesheet())
     window = MainWindow()
     window.show()

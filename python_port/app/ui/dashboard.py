@@ -3,6 +3,8 @@ from __future__ import annotations
 from PySide6 import QtWidgets
 
 from app.services import accounts_service, proxies_service
+from app.services.queue_service import QueueService
+from app.workers.run_001proxy_worker import reset_stop, run_001proxy_loop, stop_all
 
 
 class DashboardView(QtWidgets.QWidget):
@@ -20,6 +22,14 @@ class DashboardView(QtWidgets.QWidget):
         refresh.clicked.connect(self.refresh)  # type: ignore[attr-defined]
         header.addWidget(refresh)
         layout.addLayout(header)
+
+        actions = QtWidgets.QHBoxLayout()
+        self._run_toggle = QtWidgets.QPushButton("Run 5 Chrome (001proxy)")
+        self._run_toggle.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))
+        self._run_toggle.clicked.connect(self.toggle_001proxy_batch)  # type: ignore[attr-defined]
+        actions.addWidget(self._run_toggle)
+        actions.addStretch(1)
+        layout.addLayout(actions)
 
         grid = QtWidgets.QGridLayout()
         grid.setHorizontalSpacing(12)
@@ -39,6 +49,8 @@ class DashboardView(QtWidgets.QWidget):
         layout.addStretch(1)
 
         self.refresh()
+        self._queue = QueueService(max_workers=5)
+        self._is_001proxy_running = False
 
     def _stat_card(self, title: str, value: str, hint: str) -> tuple[QtWidgets.QFrame, QtWidgets.QLabel, QtWidgets.QLabel]:
         card = QtWidgets.QFrame()
@@ -75,3 +87,17 @@ class DashboardView(QtWidgets.QWidget):
         self._failed_value[2].setText("Needs review" if failed else "All good")
         self._proxy_value[1].setText(f"{proxy_running}/{proxy_total}")
         self._proxy_value[2].setText("Active keys")
+
+    def toggle_001proxy_batch(self) -> None:
+        if not self._is_001proxy_running:
+            reset_stop()
+            for _ in range(5):
+                self._queue.submit(run_001proxy_loop)
+            self._is_001proxy_running = True
+            self._run_toggle.setText("Stop 001proxy")
+            self._run_toggle.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaStop))
+        else:
+            stop_all()
+            self._is_001proxy_running = False
+            self._run_toggle.setText("Run 5 Chrome (001proxy)")
+            self._run_toggle.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_MediaPlay))

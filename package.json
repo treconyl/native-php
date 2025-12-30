@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite",
-        "playwright:garena": "node playwright/garena-runner.js"
+        "playwright:garena": "node playwright/garena-runner.js",
+        "playwright:001proxy": "node playwright/001proxy-test.js"
     },
     "devDependencies": {
         "@playwright/test": "^1.56.1",

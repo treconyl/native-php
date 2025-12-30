@@ -21,7 +21,10 @@ async function run() {
     const context = await browser.newContext();
     const page = await context.newPage();
 
-    await page.goto("https://001proxy.com/", { waitUntil: "load", timeout: 60000 });
+    await page.goto("https://001proxy.com/", {
+        waitUntil: "load",
+        timeout: 60000,
+    });
 
     const loginTrigger = await waitForAny(page, [
         'text="Khu vực khách hàng"',
@@ -56,7 +59,7 @@ async function run() {
     await emailInput.fill(email);
     await passwordInput.fill(password);
 
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     await context.close();
     await browser.close();
 }

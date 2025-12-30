@@ -8,12 +8,13 @@ repo_root = project_dir.parent
 
 app = project_dir / "app" / "main.py"
 playwright_script = repo_root / "playwright" / "garena-runner.js"
+logo_asset = project_dir / "assets" / "logo.png"
 
 analysis = Analysis(
     [str(app)],
     pathex=[str(project_dir)],
     binaries=[],
-    datas=[(str(playwright_script), "playwright")],
+    datas=[(str(playwright_script), "playwright"), (str(logo_asset), "assets")],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
@@ -28,7 +29,7 @@ exe = EXE(
     analysis.binaries,
     analysis.datas,
     [],
-    name="garena-tool",
+    name="garena-change-password",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

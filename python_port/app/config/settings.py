@@ -3,10 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+REPO_ROOT = BASE_DIR.parent
 DATA_DIR = BASE_DIR / "data"
 LOG_DIR = BASE_DIR / "logs"
+ASSETS_DIR = BASE_DIR / "assets"
 DB_PATH = DATA_DIR / "app.sqlite3"
 LOG_FILE = LOG_DIR / "garena-test.log"
+PLAYWRIGHT_DIR = REPO_ROOT / "playwright"
 
 DEFAULT_NEW_PASSWORD = "Password#2025"
 

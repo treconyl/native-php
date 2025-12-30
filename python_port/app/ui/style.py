@@ -6,104 +6,109 @@ def app_stylesheet() -> str:
     QWidget {
         font-family: "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
         font-size: 13px;
-        color: #e6e8ec;
-        background-color: #111318;
+        color: #2b2f36;
+        background-color: #fff2ea;
     }
 
     QMainWindow::separator {
-        background: #1c2128;
+        background: #f0d5c4;
         width: 1px;
         height: 1px;
     }
 
     QTabWidget::pane {
-        border: 1px solid #242a32;
-        border-radius: 12px;
-        padding: 12px;
-        background: #151820;
+        border: 1px solid #f0d5c4;
+        border-radius: 18px;
+        padding: 16px;
+        background: #fff7f2;
     }
 
     QTabBar::tab {
-        background: #1a1f27;
-        color: #aab1bb;
-        padding: 8px 16px;
-        border-radius: 10px;
-        margin-right: 8px;
+        background: #ffffff;
+        color: #9a7d6d;
+        padding: 10px 18px;
+        border-radius: 16px;
+        margin-right: 10px;
     }
 
     QTabBar::tab:selected {
-        background: #2b6ff8;
+        background: #ff7a2f;
         color: #ffffff;
     }
 
     QPushButton {
-        background: #2b6ff8;
+        background: #ff7a2f;
         border: none;
-        border-radius: 10px;
-        padding: 8px 14px;
+        border-radius: 14px;
+        padding: 9px 16px;
         font-weight: 600;
+        color: #ffffff;
     }
 
     QPushButton:hover {
-        background: #1f5fe0;
+        background: #f06b1e;
     }
 
     QPushButton:pressed {
-        background: #184ec0;
+        background: #e45f14;
     }
 
     QLineEdit, QComboBox, QTextEdit, QPlainTextEdit {
-        background: #1a1f27;
-        border: 1px solid #2a313b;
-        border-radius: 8px;
-        padding: 6px 8px;
-        selection-background-color: #2b6ff8;
+        background: #ffffff;
+        border: 1px solid #f0d5c4;
+        border-radius: 12px;
+        padding: 8px 10px;
+        selection-background-color: #ff7a2f;
     }
 
     QComboBox::drop-down {
         border: none;
-        width: 18px;
+        width: 20px;
     }
 
     QTableWidget {
-        background: #151820;
-        border: 1px solid #242a32;
-        border-radius: 10px;
-        gridline-color: #232a32;
+        background: #ffffff;
+        border: 1px solid #f0d5c4;
+        border-radius: 16px;
+        gridline-color: #f3dfd3;
     }
 
     QHeaderView::section {
-        background: #1a1f27;
-        color: #9aa3af;
-        padding: 6px 8px;
+        background: #fff0e8;
+        color: #a07055;
+        padding: 8px 10px;
         border: none;
-        border-bottom: 1px solid #242a32;
+        border-bottom: 1px solid #f0d5c4;
     }
 
     QTableWidget::item:selected {
-        background: #24324b;
+        background: #ffe7d6;
     }
 
     QLabel#sectionTitle {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 600;
-        color: #f1f5f9;
+        color: #1f2937;
     }
 
     QFrame#statCard {
-        background: #1a1f27;
-        border: 1px solid #2a313b;
-        border-radius: 12px;
-        padding: 12px;
+        background: #ffffff;
+        border: 1px solid #f2dacb;
+        border-radius: 18px;
+        padding: 14px;
+    }
+
+    QLabel#statValue, QLabel#statHint {
+        background: transparent;
     }
 
     QLabel#statValue {
-        font-size: 20px;
+        font-size: 22px;
         font-weight: 700;
-        color: #ffffff;
+        color: #111827;
     }
 
     QLabel#statHint {
-        color: #94a3b8;
+        color: #9a7d6d;
     }
     """

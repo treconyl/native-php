@@ -22,6 +22,21 @@ def list_proxies() -> list[dict[str, Any]]:
     return results
 
 
+def get_proxy(proxy_id: int) -> dict[str, Any] | None:
+    with db.session() as connection:
+        row = db.execute_with_retry(
+            connection,
+            "SELECT * FROM proxy_keys WHERE id = ?;",
+            (proxy_id,),
+        ).fetchone()
+    if not row:
+        return None
+    payload = dict(row)
+    meta = payload.get("meta")
+    payload["meta"] = json.loads(meta) if meta else {}
+    return payload
+
+
 def create_proxy(payload: dict[str, Any]) -> None:
     now = datetime.utcnow().isoformat(timespec="seconds")
     with db.session() as connection:

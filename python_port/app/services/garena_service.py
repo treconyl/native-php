@@ -9,7 +9,7 @@ from app.config import settings
 
 
 def run_playwright(credentials: dict[str, Any]) -> tuple[int, str | None]:
-    script = Path(__file__).resolve().parents[2] / "playwright" / "garena-runner.js"
+    script = settings.PLAYWRIGHT_DIR / "garena-runner.js"
 
     env = os.environ.copy()
     env.update(
@@ -27,7 +27,7 @@ def run_playwright(credentials: dict[str, Any]) -> tuple[int, str | None]:
 
     process = subprocess.Popen(
         ["node", str(script)],
-        cwd=str(Path(__file__).resolve().parents[2]),
+        cwd=str(settings.PLAYWRIGHT_DIR.parent),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
