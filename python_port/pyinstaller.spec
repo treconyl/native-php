@@ -1,9 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 from pathlib import Path
+import os
 
 block_cipher = None
 
-project_dir = Path(__file__).resolve().parent
+project_dir = Path(os.getcwd()).resolve()
 repo_root = project_dir.parent
 
 app = project_dir / "app" / "main.py"
