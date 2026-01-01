@@ -3,6 +3,7 @@ from __future__ import annotations
 import subprocess
 import threading
 import time
+from datetime import datetime
 from app.config import settings
 from app.services.runner_env import build_node_env
 
@@ -13,6 +14,10 @@ _stop_event = threading.Event()
 
 def run_001proxy_test() -> int:
     script = settings.PLAYWRIGHT_DIR / "001proxy-test.js"
+    log_path = settings.LOG_DIR / "001proxy.log"
+    if not script.exists():
+        log_path.write_text(f"{datetime.utcnow().isoformat()} missing script: {script}\n", encoding="utf-8")
+        return 1
     process = subprocess.Popen(
         ["node", str(script)],
         cwd=str(settings.PLAYWRIGHT_DIR.parent),
@@ -25,6 +30,10 @@ def run_001proxy_test() -> int:
         _processes.append(process)
 
     try:
+        if process.stdout:
+            with log_path.open("a", encoding="utf-8") as handle:
+                for line in process.stdout:
+                    handle.write(line)
         return process.wait()
     finally:
         with _lock:
