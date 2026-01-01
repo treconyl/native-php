@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-REPO_ROOT = BASE_DIR.parent
+if getattr(sys, "frozen", False):
+    BASE_DIR = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    REPO_ROOT = BASE_DIR
+else:
+    BASE_DIR = Path(__file__).resolve().parents[2]
+    REPO_ROOT = BASE_DIR.parent
 DATA_DIR = BASE_DIR / "data"
 LOG_DIR = BASE_DIR / "logs"
 ASSETS_DIR = BASE_DIR / "assets"

@@ -1,11 +1,13 @@
 # Python port notes
 
 ## Scope and business flow
+
 - Goal: replace PHP/Laravel with a native Python desktop app (PySide6) while keeping the core workflow: manage accounts, manage proxies, run Playwright to rotate passwords, view logs.
 - Runtime: macOS + Windows via PyInstaller.
 - Storage: SQLite with WAL + retry to handle up to 5 concurrent workers writing status.
 
 ## Steps (done / todo)
+
 - [x] Create Python app skeleton under `python_port/`.
 - [x] Add SQLite init + migrations (accounts, proxy_keys, garena_test_credentials).
 - [x] Implement CRUD services for accounts and proxies.
@@ -22,6 +24,7 @@
 - [x] Add packaging spec and build script for PyInstaller (icon, logs, assets).
 
 ## Key files
+
 - `python_port/app/main.py` - app entry, tabs.
 - `python_port/app/services/db.py` - SQLite WAL + retry + migrate.
 - `python_port/app/services/accounts_service.py` - accounts CRUD + import/export.
@@ -31,13 +34,16 @@
 - `python_port/requirements.txt` - runtime deps.
 
 ## Basic run (dev)
+
 - Install deps: `pip install -r python_port/requirements.txt`
 - Run UI: `python -m app.main` from `python_port/`
 
 ## Build (PyInstaller)
+
 - Run: `./build_pyinstaller.sh` from `python_port/`
 - Output: `python_port/dist/garena-tool`
 
 ## Notes
+
 - SQLite is safe for 5 workers if WAL + retry is enabled (already in `db.py`).
 - Playwright Node script is reused from existing `playwright/garena-runner.js`.

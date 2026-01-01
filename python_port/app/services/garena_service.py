@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Any
 
 from app.config import settings
+from app.services.runner_env import build_node_env
 
 
 def run_playwright(credentials: dict[str, Any]) -> tuple[int, str | None]:
     script = settings.PLAYWRIGHT_DIR / "garena-runner.js"
 
-    env = os.environ.copy()
+    env = build_node_env()
     env.update(
         {
             "GARENA_USERNAME": credentials["username"],

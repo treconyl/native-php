@@ -2,6 +2,16 @@ from __future__ import annotations
 
 import sys
 
+import os
+import warnings
+
+os.environ.setdefault("QT_LOGGING_RULES", "qt.gui.icc=false")
+
+try:
+    from urllib3.exceptions import NotOpenSSLWarning
+except Exception:  # pragma: no cover - optional dependency behavior
+    NotOpenSSLWarning = None
+
 from PySide6 import QtGui, QtWidgets
 
 from app.services import db
@@ -34,6 +44,9 @@ class MainWindow(QtWidgets.QMainWindow):
 def main() -> int:
     db.ensure_paths()
     db.migrate()
+
+    if NotOpenSSLWarning is not None:
+        warnings.filterwarnings("ignore", category=NotOpenSSLWarning)
 
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("Garena Change Password")

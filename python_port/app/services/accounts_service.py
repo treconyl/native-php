@@ -9,7 +9,14 @@ from typing import Any
 from app.services import db
 
 
-def list_accounts(search: str | None = None, status: str | None = None) -> list[dict[str, Any]]:
+def list_accounts(
+    search: str | None = None,
+    status: str | None = None,
+    sort: str | None = None,
+    limit: int | None = None,
+    offset: int | None = None,
+    error_only: bool = False,
+) -> list[dict[str, Any]]:
     conditions = []
     params: list[object] = []
 
@@ -19,13 +26,54 @@ def list_accounts(search: str | None = None, status: str | None = None) -> list[
     if status:
         conditions.append("status = ?")
         params.append(status)
+    if error_only or sort == "error_latest":
+        conditions.append("last_error IS NOT NULL")
 
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
-    sql = f"SELECT * FROM accounts {where} ORDER BY id DESC;"
+    order_by = "updated_at DESC"
+    if sort == "updated_oldest":
+        order_by = "updated_at ASC"
+    if sort == "attempt_newest":
+        order_by = "last_attempted_at DESC, id DESC"
+    if sort == "attempt_oldest":
+        order_by = "last_attempted_at ASC, id ASC"
+    if sort == "error_latest":
+        order_by = "last_attempted_at DESC, id DESC"
+
+    limit_clause = ""
+    params_out = list(params)
+    if limit is not None:
+        limit_clause = " LIMIT ?"
+        params_out.append(limit)
+        if offset is not None:
+            limit_clause += " OFFSET ?"
+            params_out.append(offset)
+
+    sql = f"SELECT * FROM accounts {where} ORDER BY {order_by}{limit_clause};"
 
     with db.session() as connection:
-        rows = db.execute_with_retry(connection, sql, tuple(params)).fetchall()
+        rows = db.execute_with_retry(connection, sql, tuple(params_out)).fetchall()
     return [dict(row) for row in rows]
+
+
+def count_accounts(search: str | None = None, status: str | None = None, error_only: bool = False) -> int:
+    conditions = []
+    params: list[object] = []
+
+    if search:
+        conditions.append("login LIKE ?")
+        params.append(f"%{search}%")
+    if status:
+        conditions.append("status = ?")
+        params.append(status)
+    if error_only:
+        conditions.append("last_error IS NOT NULL")
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    sql = f"SELECT COUNT(*) FROM accounts {where};"
+
+    with db.session() as connection:
+        return db.execute_with_retry(connection, sql, tuple(params)).fetchone()[0]
 
 
 def create_account(payload: dict[str, Any]) -> None:

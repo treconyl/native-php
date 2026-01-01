@@ -4,6 +4,7 @@ import subprocess
 import threading
 import time
 from app.config import settings
+from app.services.runner_env import build_node_env
 
 _lock = threading.Lock()
 _processes: list[subprocess.Popen[str]] = []
@@ -15,6 +16,7 @@ def run_001proxy_test() -> int:
     process = subprocess.Popen(
         ["node", str(script)],
         cwd=str(settings.PLAYWRIGHT_DIR.parent),
+        env=build_node_env(),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

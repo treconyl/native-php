@@ -4,7 +4,7 @@ from __future__ import annotations
 def app_stylesheet() -> str:
     return """
     QWidget {
-        font-family: "SF Pro Text", "Helvetica Neue", "Segoe UI", sans-serif;
+        font-family: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
         font-size: 13px;
         color: #2b2f36;
         background-color: #fff2ea;

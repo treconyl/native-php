@@ -9,13 +9,18 @@ repo_root = project_dir.parent
 
 app = project_dir / "app" / "main.py"
 playwright_script = repo_root / "playwright" / "garena-runner.js"
+proxy_script = repo_root / "playwright" / "001proxy-test.js"
 logo_asset = project_dir / "assets" / "logo.png"
 
 analysis = Analysis(
     [str(app)],
     pathex=[str(project_dir)],
     binaries=[],
-    datas=[(str(playwright_script), "playwright"), (str(logo_asset), "assets")],
+    datas=[
+        (str(playwright_script), "playwright"),
+        (str(proxy_script), "playwright"),
+        (str(logo_asset), "assets"),
+    ],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],
